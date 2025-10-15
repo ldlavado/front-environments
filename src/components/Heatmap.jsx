@@ -1,0 +1,51 @@
+import React, { useMemo } from 'react'
+
+function colorFor(value, max) {
+  if (max <= 0) return '#fff'
+  const ratio = value / max
+  const r = Math.round(255 - ratio * 120)
+  const g = Math.round(255 - ratio * 200)
+  const b = Math.round(255 - ratio * 200)
+  return `rgb(${r},${g},${b})`
+}
+
+export default function Heatmap({ stakeholders, environments }) {
+  const { rows, max } = useMemo(() => {
+    let max = 0
+    const rows = stakeholders.map((s) => {
+      const cells = environments.map((env) => {
+        const total = Object.keys(s.variables || {}).reduce((acc, v) => acc + Number((s.variables[v].impacto_pct?.[env] || 0)), 0)
+        if (total > max) max = total
+        return total
+      })
+      return { stakeholder: s.stakeholder, cells }
+    })
+    return { rows, max }
+  }, [stakeholders, environments])
+
+  return (
+    <div style={{ padding: 12 }}>
+      <h2>Heatmap (Stakeholder × Entorno)</h2>
+      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left', padding: 6 }}>Stakeholder</th>
+            {environments.map((e) => (
+              <th key={e} style={{ padding: 6, textAlign: 'center' }}>{String(e).charAt(0).toUpperCase() + String(e).slice(1)}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.stakeholder}>
+              <td style={{ padding: 6 }}>{r.stakeholder}</td>
+              {r.cells.map((c, i) => (
+                <td key={i} style={{ padding: 6, textAlign: 'center', background: colorFor(c, max) }}>{c}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
