@@ -1,7 +1,7 @@
 export const stakeholders = [
   {
     stakeholder: 'MinTIC',
-    total_pct: 100,
+    total_pct: 10,
     variables: {
       'Política de datos e interoperabilidad (estándares, datos abiertos)': {
         total_pct: 22,
@@ -31,7 +31,7 @@ export const stakeholders = [
   },
   {
     stakeholder: 'MinAmbiente',
-    total_pct: 100,
+    total_pct: 8,
     variables: {
       'Gestión de RAEE (residuos de equipos eléctricos/electrónicos)': {
         total_pct: 22,
@@ -61,7 +61,7 @@ export const stakeholders = [
   },
   {
     stakeholder: 'Proveedor IoT/Cloud',
-    total_pct: 100,
+    total_pct: 15,
     variables: {
       'SLA, disponibilidad y redundancia multi-región': {
         total_pct: 22,
@@ -91,7 +91,7 @@ export const stakeholders = [
   },
   {
     stakeholder: 'Cliente/Operaciones',
-    total_pct: 100,
+    total_pct: 18,
     variables: {
       'Aprobación de presupuesto y procurement': {
         total_pct: 22,
@@ -116,6 +116,136 @@ export const stakeholders = [
       'HSE/Seguridad industrial y continuidad de negocio': {
         total_pct: 14,
         impacto_pct: { politico: 1, económico: 2, técnico: 3, social: 4, ambiental: 1, legal: 3 },
+      },
+    },
+  },
+  {
+    stakeholder: 'Ministerio de Minas y Energía',
+    total_pct: 12,
+    variables: {
+      'Normativa de eficiencia energética': {
+        total_pct: 25,
+        impacto_pct: { politico: 6, económico: 4, técnico: 7, social: 1, ambiental: 8, legal: 4 },
+      },
+      'Incentivos y financiación sostenibles': {
+        total_pct: 25,
+        impacto_pct: { politico: 5, económico: 9, técnico: 4, social: 2, ambiental: 5, legal: 3 },
+      },
+      'Regulación del consumo energético': {
+        total_pct: 25,
+        impacto_pct: { politico: 4, económico: 6, técnico: 8, social: 1, ambiental: 7, legal: 4 },
+      },
+      'Transición energética y economía baja en carbono': {
+        total_pct: 25,
+        impacto_pct: { politico: 7, económico: 5, técnico: 5, social: 2, ambiental: 8, legal: 3 },
+      },
+    },
+  },
+  {
+    stakeholder: 'ARL / Seguridad y Salud en el Trabajo',
+    total_pct: 6,
+    variables: {
+      'Condiciones térmicas y confort laboral (NTC 5316)': {
+        total_pct: 35,
+        impacto_pct: { politico: 1, económico: 2, técnico: 5, social: 8, ambiental: 2, legal: 6 },
+      },
+      'Protocolos de riesgo ocupacional y mantenimiento': {
+        total_pct: 30,
+        impacto_pct: { politico: 1, económico: 1, técnico: 4, social: 7, ambiental: 1, legal: 6 },
+      },
+      'Capacitación y seguridad industrial': {
+        total_pct: 35,
+        impacto_pct: { politico: 0, económico: 2, técnico: 6, social: 8, ambiental: 0, legal: 4 },
+      },
+    },
+  },
+  {
+    stakeholder: 'MinCiencias',
+    total_pct: 4,
+    variables: {
+      'Convocatorias de innovación tecnológica': {
+        total_pct: 35,
+        impacto_pct: { politico: 3, económico: 8, técnico: 7, social: 1, ambiental: 0, legal: 1 },
+      },
+      'Fomento de investigación aplicada': {
+        total_pct: 35,
+        impacto_pct: { politico: 5, económico: 6, técnico: 7, social: 1, ambiental: 0, legal: 1 },
+      },
+      'Transferencia tecnológica e I+D': {
+        total_pct: 30,
+        impacto_pct: { politico: 3, económico: 4, técnico: 8, social: 0, ambiental: 0, legal: 5 },
+      },
+    },
+  },
+  {
+    stakeholder: 'Empresas de Energía (ENEL, EPM, etc.)',
+    total_pct: 8,
+    variables: {
+      'Política tarifaria y picos de demanda': {
+        total_pct: 35,
+        impacto_pct: { politico: 3, económico: 9, técnico: 3, social: 1, ambiental: 0, legal: 4 },
+      },
+      'Interconexión y monitoreo energético': {
+        total_pct: 35,
+        impacto_pct: { politico: 2, económico: 5, técnico: 8, social: 2, ambiental: 6, legal: 2 },
+      },
+      'Programas de incentivos de eficiencia': {
+        total_pct: 30,
+        impacto_pct: { politico: 3, económico: 6, técnico: 4, social: 3, ambiental: 8, legal: 2 },
+      },
+    },
+  },
+  {
+    stakeholder: 'Talento Humano / Gestión del Cambio',
+    total_pct: 10,
+    variables: {
+      'Resistencia o aceptación tecnológica': {
+        total_pct: 35,
+        impacto_pct: { politico: 1, económico: 3, técnico: 7, social: 9, ambiental: 0, legal: 2 },
+      },
+      'Capacitación en IoT e IA': {
+        total_pct: 35,
+        impacto_pct: { politico: 1, económico: 2, técnico: 9, social: 8, ambiental: 0, legal: 0 },
+      },
+      'Motivación y salario emocional': {
+        total_pct: 30,
+        impacto_pct: { politico: 0, económico: 5, técnico: 3, social: 9, ambiental: 0, legal: 1 },
+      },
+    },
+  },
+  {
+    stakeholder: 'Entidades Financieras / Sponsors',
+    total_pct: 7,
+    variables: {
+      'Tasas de interés y retorno de inversión (ROI)': {
+        total_pct: 35,
+        impacto_pct: { politico: 2, económico: 10, técnico: 3, social: 1, ambiental: 0, legal: 2 },
+      },
+      'Créditos verdes o sostenibles': {
+        total_pct: 35,
+        impacto_pct: { politico: 3, económico: 8, técnico: 2, social: 2, ambiental: 8, legal: 2 },
+      },
+      'Riesgo financiero y cumplimiento normativo': {
+        total_pct: 30,
+        impacto_pct: { politico: 5, económico: 6, técnico: 3, social: 1, ambiental: 0, legal: 5 },
+      },
+    },
+  },
+  {
+    stakeholder: 'Comunidades / Usuarios finales',
+    total_pct: 2,
+    variables: {
+      'Percepción de confort y bienestar': {
+        total_pct: 35,
+        impacto_pct: { politico: 0, económico: 2, técnico: 5, social: 9, ambiental: 1, legal: 2 },
+      },
+      'Conciencia ambiental y cultura energética': {
+        total_pct: 35,
+        impacto_pct: { politico: 1, económico: 2, técnico: 3, social: 7, ambiental: 8, legal: 2 },
+      },
+      'Aceptación del cambio tecnológico': {
+        total_pct: 30,
+        impacto_pct: { politico: 0, económico: 1, técnico: 7, social: 8, ambiental: 0, legal: 1 },
       },
     },
   },
