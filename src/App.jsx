@@ -9,6 +9,7 @@ import RadarProfile from './components/RadarProfile'
 import SimilarityMatrix from './components/SimilarityMatrix'
 import SankeySimple from './components/SankeySimple'
 import StakeholderEditor from './components/StakeholderEditor'
+import ExcelView from './components/ExcelView'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -26,6 +27,7 @@ function App() {
         <button onClick={() => setTab('environment-impact')} disabled={tab === 'environment-impact'}>
           Impacto por entorno
         </button>
+        <button onClick={() => setTab('excel')} disabled={tab === 'excel'}>Excel</button>
         <button onClick={() => setTab('stacked')} disabled={tab === 'stacked'}>Comparativa por entorno</button>
         <button onClick={() => setTab('heatmap')} disabled={tab === 'heatmap'}>Heatmap</button>
         <button onClick={() => setTab('radar')} disabled={tab === 'radar'}>Radar</button>
@@ -39,7 +41,8 @@ function App() {
       {tab === 'environment-impact' && (
         <EnvironmentImpact stakeholders={editableStakeholders} environments={environments} />
       )}
-      {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={environments} />}
+  {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={environments} />}
+  {tab === 'excel' && <ExcelView stakeholders={editableStakeholders} environments={environments} onImport={setEditableStakeholders} />}
       {tab === 'heatmap' && <Heatmap stakeholders={editableStakeholders} environments={environments} />}
       {tab === 'radar' && <RadarProfile stakeholders={editableStakeholders} environments={environments} />}
       

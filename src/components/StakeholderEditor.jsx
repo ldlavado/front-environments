@@ -166,6 +166,32 @@ export default function StakeholderEditor({ stakeholders, environments, onChange
     }
   }
 
+  function exportCsv() {
+    try {
+      const header = ['Stakeholder', 'Variable', 'Total pct', ...environments.map((e) => String(e).charAt(0).toUpperCase() + String(e).slice(1))]
+      const rows = []
+      local.forEach((s) => {
+        Object.keys(s.variables || {}).forEach((v) => {
+          const total = s.variables[v].total_pct || 0
+          const impacts = environments.map((env) => s.variables[v].impacto_pct?.[env] ?? 0)
+          rows.push([s.stakeholder, v, total, ...impacts])
+        })
+      })
+      const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'stakeholders.csv'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.warn('Export CSV failed', err)
+    }
+  }
+
   function handleFileUpload(e) {
     const f = e.target.files?.[0]
     if (!f) return
@@ -197,6 +223,7 @@ export default function StakeholderEditor({ stakeholders, environments, onChange
         <button onClick={addStakeholder}>Agregar stakeholder</button>
         <label style={{ marginLeft: 12 }}><input type="checkbox" checked={autoNormalize} onChange={(e) => setAutoNormalize(e.target.checked)} /> Auto-normalizar</label>
         <button style={{ marginLeft: 12 }} onClick={saveAll}>Guardar</button>
+        <button style={{ marginLeft: 8 }} onClick={exportCsv}>Exportar CSV</button>
         <label style={{ marginLeft: 12 }}>
           Cargar JSON: <input type="file" accept="application/json" onChange={(e) => handleFileUpload(e)} />
         </label>
