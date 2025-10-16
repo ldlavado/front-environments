@@ -1,34 +1,27 @@
 import React, { useMemo, useState } from 'react'
-import { Pie } from 'react-chartjs-2'
+import StakeholderSelector from './StakeholderSelector'
+import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-export default function Charts({ stakeholder, environments }) {
-  if (!stakeholder) return null
+export default function Charts({ stakeholders = [], environments = [] }) {
+  const [selectedStakeholder, setSelectedStakeholder] = useState(() => (stakeholders[0]?.stakeholder) || '')
 
-  const vars = stakeholder.variables
-  const labels = Object.keys(vars)
+  const stakeholder = useMemo(() => stakeholders.find((s) => s.stakeholder === selectedStakeholder) || stakeholders[0] || null, [selectedStakeholder, stakeholders])
+
+  const vars = useMemo(() => stakeholder?.variables || {}, [stakeholder])
+  const labels = useMemo(() => Object.keys(vars), [vars])
 
   // UI state: which tab and which variable is selected
   const [tab, setTab] = useState('agregado') // 'agregado' | 'por-variable'
   const [selectedVariable, setSelectedVariable] = useState(null)
+  
+  // selector ya integrado debajo de las tabs
 
   // pie for variables distribution
   const dataValues = labels.map((l) => vars[l].total_pct)
-  const pieData = useMemo(
-    () => ({
-      labels,
-      datasets: [
-        {
-          label: 'Porcentaje por variable',
-          data: dataValues,
-          backgroundColor: ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'],
-        },
-      ],
-    }),
-    [labels.join(','), dataValues.join(',')],
-  )
+  const pieData = useMemo(() => ({ labels, datasets: [{ label: 'Porcentaje por variable', data: dataValues, backgroundColor: ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'] }] }), [labels, dataValues])
 
   // aggregated environment data (sum across variables)
   const envAgg = useMemo(() => {
@@ -41,7 +34,7 @@ export default function Charts({ stakeholder, environments }) {
       })
     })
     return agg
-  }, [labels.join(','), JSON.stringify(environments)])
+  }, [labels, environments, vars])
 
   const envLabels = environments
 
@@ -52,7 +45,7 @@ export default function Charts({ stakeholder, environments }) {
       return envLabels.map((e) => Number(imp[e] || 0))
     }
     return envLabels.map((e) => envAgg[e])
-  }, [tab, selectedVariable, envAgg, envLabels.join(','), labels.join(',')])
+  }, [tab, selectedVariable, envAgg, envLabels, vars])
 
   const envPie = useMemo(
     () => ({
@@ -65,7 +58,7 @@ export default function Charts({ stakeholder, environments }) {
         },
       ],
     }),
-    [envLabels.join(','), envData.join(',')],
+    [envLabels, envData, selectedVariable, tab],
   )
 
   // helper: click a variable (from list) to switch to por-variable tab and set selection
@@ -85,15 +78,19 @@ export default function Charts({ stakeholder, environments }) {
         </button>
       </div>
 
+      <div style={{ marginBottom: 12 }}>
+        <StakeholderSelector stakeholders={stakeholders} value={selectedStakeholder} onChange={setSelectedStakeholder} />
+      </div>
+
       {tab === 'agregado' && (
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-          <div style={{ width: 480 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
+          <div style={{ width: 480, textAlign: 'center' }}>
             <h3>Distribución por variable</h3>
-            <Pie data={pieData} />
+            <Doughnut data={pieData} />
           </div>
-          <div style={{ width: 320 }}>
+          <div style={{ width: 480, textAlign: 'center' }}>
             <h3>Impacto por entorno (agregado)</h3>
-            <Pie data={envPie} />
+            <Doughnut data={envPie} />
           </div>
         </div>
       )}
@@ -120,9 +117,9 @@ export default function Charts({ stakeholder, environments }) {
               ))}
             </ul>
           </div>
-          <div style={{ width: 480 }}>
+          <div style={{ width: 480, textAlign: 'center' }}>
             <h3>{selectedVariable ? `Impacto por entorno — ${selectedVariable}` : 'Selecciona una variable'}</h3>
-            <Pie data={envPie} />
+            <Doughnut data={envPie} />
           </div>
         </div>
       )}
