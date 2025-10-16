@@ -1,0 +1,12 @@
+# Render static site configuration
+# Docs: https://render.com/docs/static-sites
+services:
+  - type: static
+    name: front-environments
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "dist"
+    plan: free
+    branch: main
+    autoDeploy: true
+    runtime: node
+    schedule: cron

@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react'
 import StakeholderSelector from './StakeholderSelector'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import ChartDataLabels from 'chartjs-plugin-datalabels'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels)
 
 export default function Charts({ stakeholders = [], environments = [] }) {
   const [selectedStakeholder, setSelectedStakeholder] = useState(() => (stakeholders[0]?.stakeholder) || '')
@@ -61,6 +62,38 @@ export default function Charts({ stakeholders = [], environments = [] }) {
     [envLabels, envData, selectedVariable, tab],
   )
 
+  // Opciones comunes para los doughnuts con números en cada fracción
+  const doughnutOptions = useMemo(
+    () => ({
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          color: '#222',
+          font: { weight: '600' },
+          // Mostrar solo si el segmento está visible y el valor es distinto de 0
+          display: (context) => {
+            const { chart, dataIndex, dataset } = context
+            const value = dataset?.data?.[dataIndex]
+            if (typeof value !== 'number' || !isFinite(value) || value === 0) return false
+            if (typeof chart?.getDataVisibility === 'function' && !chart.getDataVisibility(dataIndex)) return false
+            return true
+          },
+          // Formateo del número (enteros por defecto). Cambia a porcentaje si lo necesitas
+          formatter: (value) => {
+            if (value == null) return ''
+            // Si son porcentajes, redondeamos y añadimos %; ajusta según tu preferencia
+            const rounded = Math.round(value)
+            return `${rounded}`
+          },
+          anchor: 'center',
+          align: 'center',
+          clamp: true,
+        },
+      },
+    }),
+    [],
+  )
+
   // helper: click a variable (from list) to switch to por-variable tab and set selection
   function onVariableClick(name) {
     setSelectedVariable(name)
@@ -86,11 +119,11 @@ export default function Charts({ stakeholders = [], environments = [] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
           <div style={{ width: 480, textAlign: 'center' }}>
             <h3>Distribución por variable</h3>
-            <Doughnut data={pieData} />
+            <Doughnut data={pieData} options={doughnutOptions} />
           </div>
           <div style={{ width: 480, textAlign: 'center' }}>
             <h3>Impacto por entorno (agregado)</h3>
-            <Doughnut data={envPie} />
+            <Doughnut data={envPie} options={doughnutOptions} />
           </div>
         </div>
       )}
@@ -119,7 +152,7 @@ export default function Charts({ stakeholders = [], environments = [] }) {
           </div>
           <div style={{ width: 480, textAlign: 'center' }}>
             <h3>{selectedVariable ? `Impacto por entorno — ${selectedVariable}` : 'Selecciona una variable'}</h3>
-            <Doughnut data={envPie} />
+            <Doughnut data={envPie} options={doughnutOptions} />
           </div>
         </div>
       )}
