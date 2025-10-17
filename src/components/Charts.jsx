@@ -94,6 +94,40 @@ export default function Charts({ stakeholders = [], environments = [] }) {
     [],
   )
 
+  // Datos para visualizar el peso de las variables (total_pct) y resaltar la seleccionada
+  const varLabels = labels
+  const varData = useMemo(() => varLabels.map((l) => Number(vars[l]?.total_pct || 0)), [varLabels, vars])
+  const selectedIndex = useMemo(() => (selectedVariable ? varLabels.indexOf(selectedVariable) : -1), [selectedVariable, varLabels])
+  const varColors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f']
+  const varPie = useMemo(
+    () => ({
+      labels: varLabels,
+      datasets: [
+        {
+          label: stakeholder ? `Peso de variables — ${stakeholder.stakeholder}` : 'Peso de variables',
+          data: varData,
+          backgroundColor: varLabels.map((_, i) => varColors[i % varColors.length]),
+          offset: (ctx) => (ctx.dataIndex === selectedIndex ? 18 : 0),
+          hoverOffset: 12,
+          borderColor: (ctx) => (ctx.dataIndex === selectedIndex ? '#222' : '#fff'),
+          borderWidth: (ctx) => (ctx.dataIndex === selectedIndex ? 2 : 1),
+        },
+      ],
+    }),
+    [varLabels, varData, selectedIndex, stakeholder],
+  )
+
+  const varPieOptions = useMemo(() => ({
+    ...doughnutOptions,
+    plugins: {
+      ...doughnutOptions.plugins,
+      datalabels: {
+        ...doughnutOptions.plugins.datalabels,
+        formatter: (value) => (value == null ? '' : `${Math.round(value)}%`),
+      },
+    },
+  }), [doughnutOptions])
+
   // helper: click a variable (from list) to switch to por-variable tab and set selection
   function onVariableClick(name) {
     setSelectedVariable(name)
@@ -150,9 +184,36 @@ export default function Charts({ stakeholders = [], environments = [] }) {
               ))}
             </ul>
           </div>
-          <div style={{ width: 480, textAlign: 'center' }}>
-            <h3>{selectedVariable ? `Impacto por entorno — ${selectedVariable}` : 'Selecciona una variable'}</h3>
-            <Doughnut data={envPie} options={doughnutOptions} />
+          <div style={{ width: 520, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div>
+              <h3>{selectedVariable ? `Impacto por entorno — ${selectedVariable}` : 'Selecciona una variable'}</h3>
+              <Doughnut data={envPie} options={doughnutOptions} />
+              {selectedVariable && (
+                <div style={{ marginTop: 8, color: '#555' }}>
+                  Peso de la variable seleccionada: <strong>{Number(vars[selectedVariable]?.total_pct || 0)}%</strong>
+                </div>
+              )}
+              <div style={{ marginTop: 8, fontSize: 12, color: '#777' }}>
+                Nota: este gráfico usa <code>impacto_pct</code> de la variable para repartir el valor por entorno.
+              </div>
+            </div>
+            <div>
+              <h3>{stakeholder ? `Peso de variables — ${stakeholder.stakeholder}` : 'Peso de variables'}</h3>
+              <Doughnut
+                data={varPie}
+                options={varPieOptions}
+                onClick={(_, elements, chart) => {
+                  const first = elements?.[0]
+                  if (!first) return
+                  const idx = first.index
+                  const name = chart?.data?.labels?.[idx]
+                  if (name) onVariableClick(name)
+                }}
+              />
+              <div style={{ marginTop: 8, fontSize: 12, color: '#777' }}>
+                Este gráfico muestra <code>total_pct</code> por variable en el stakeholder. La seleccionada se resalta.
+              </div>
+            </div>
           </div>
         </div>
       )}

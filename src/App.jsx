@@ -10,11 +10,12 @@ import SimilarityMatrix from './components/SimilarityMatrix'
 import SankeySimple from './components/SankeySimple'
 import StakeholderEditor from './components/StakeholderEditor'
 import ExcelView from './components/ExcelView'
+import EnvironmentResilience from './components/EnvironmentResilience'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
 
-  const [tab, setTab] = useState('charts') // 'charts' | 'environment-impact'
+  const [tab, setTab] = useState('charts') // 'charts' | 'environment-impact' | 'resilience'
 
   return (
     <div style={{ padding: 24 }}>
@@ -35,6 +36,7 @@ function App() {
         <button onClick={() => setTab('sim')} disabled={tab === 'sim'}>Similitud</button>
         <button onClick={() => setTab('sankey')} disabled={tab === 'sankey'}>Sankey (texto)</button>
         <button onClick={() => setTab('editor')} disabled={tab === 'editor'}>Editor</button>
+        <button onClick={() => setTab('resilience')} disabled={tab === 'resilience'}>Resiliencia</button>
       </div>
 
   {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={environments} />}
@@ -49,6 +51,7 @@ function App() {
       {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={environments} />}
       {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={environments} />}
       {tab === 'editor' && <StakeholderEditor stakeholders={editableStakeholders} environments={environments} onChange={setEditableStakeholders} />}
+  {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={environments} />}
     </div>
   )
 }
