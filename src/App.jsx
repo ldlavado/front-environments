@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { stakeholders, environments } from './data'
 import Charts from './components/Charts'
@@ -11,33 +11,50 @@ import SankeySimple from './components/SankeySimple'
 import StakeholderEditor from './components/StakeholderEditor'
 import ExcelView from './components/ExcelView'
 import EnvironmentResilience from './components/EnvironmentResilience'
+import Navbar from './components/Navbar'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
 
-  const [tab, setTab] = useState('charts') // 'charts' | 'environment-impact' | 'resilience'
+  const routes = useMemo(() => ([
+    { key: 'charts', title: 'Charts' },
+    { key: 'environment-impact', title: 'Impacto por entorno' },
+    { key: 'excel', title: 'Excel' },
+    { key: 'stacked', title: 'Comparativa por entorno' },
+    { key: 'heatmap', title: 'Heatmap' },
+    { key: 'radar', title: 'Radar' },
+    { key: 'sim', title: 'Similitud' },
+    { key: 'sankey', title: 'Sankey (texto)' },
+    { key: 'editor', title: 'Editor' },
+    { key: 'resilience', title: 'Resiliencia' },
+  ]), [])
+
+  const initialTab = useMemo(() => {
+    const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : ''
+    const exists = routes.some(r => r.key === hash)
+    return exists ? hash : 'charts'
+  }, [routes])
+
+  const [tab, setTab] = useState(initialTab)
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const next = window.location.hash.replace('#', '')
+      if (routes.some(r => r.key === next)) setTab(next)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [routes])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.replace('#','') !== tab) {
+      window.location.hash = tab
+    }
+  }, [tab])
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Dashboard de stakeholders</h1>
-
-  <div style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button onClick={() => setTab('charts')} disabled={tab === 'charts'} style={{ marginRight: 8 }}>
-          Charts
-        </button>
-        <button onClick={() => setTab('environment-impact')} disabled={tab === 'environment-impact'}>
-          Impacto por entorno
-        </button>
-        <button onClick={() => setTab('excel')} disabled={tab === 'excel'}>Excel</button>
-        <button onClick={() => setTab('stacked')} disabled={tab === 'stacked'}>Comparativa por entorno</button>
-        <button onClick={() => setTab('heatmap')} disabled={tab === 'heatmap'}>Heatmap</button>
-        <button onClick={() => setTab('radar')} disabled={tab === 'radar'}>Radar</button>
-        
-        <button onClick={() => setTab('sim')} disabled={tab === 'sim'}>Similitud</button>
-        <button onClick={() => setTab('sankey')} disabled={tab === 'sankey'}>Sankey (texto)</button>
-        <button onClick={() => setTab('editor')} disabled={tab === 'editor'}>Editor</button>
-        <button onClick={() => setTab('resilience')} disabled={tab === 'resilience'}>Resiliencia</button>
-      </div>
+      <Navbar items={routes} current={tab} onNavigate={setTab} />
 
   {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={environments} />}
       {tab === 'environment-impact' && (

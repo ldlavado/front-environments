@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 function downloadCSV(filename, rows) {
   const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
+  // add UTF-8 BOM for Excel compatibility with accents
+  const bom = new Uint8Array([0xEF, 0xBB, 0xBF])
+  const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -43,6 +45,18 @@ function parseCSV(text) {
 
 export default function ExcelView({ stakeholders, environments, onImport }) {
   const [filter, setFilter] = useState('')
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState({ index: 0, dir: 'asc' }) // index in row, 'asc' | 'desc'
+  const [importInfo, setImportInfo] = useState(null)
+  const [colFilters, setColFilters] = useState({}) // { colIndex: value }
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
+  // debounce filter input
+  useEffect(() => {
+    const t = setTimeout(() => setFilter(query.trim()), 250)
+    return () => clearTimeout(t)
+  }, [query])
 
   // rows: [stakeholder, variable, total_pct, ...impacts]
   const rows = useMemo(() => {
@@ -57,7 +71,41 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
     return out
   }, [stakeholders, environments])
 
-  const filtered = rows.filter((r) => r.join(' ').toLowerCase().includes(filter.toLowerCase()))
+  // unique values per column for dropdowns (computed on unfiltered rows to provide full set)
+  const headers = useMemo(() => ['Stakeholder', 'Variable', 'Total pct', ...environments.map((e) => String(e).charAt(0).toUpperCase() + String(e).slice(1))], [environments])
+  const uniqueByCol = useMemo(() => {
+    const maps = headers.map(() => new Set())
+    rows.forEach((r) => r.forEach((val, idx) => maps[idx].add(String(val))))
+    return maps.map((s) => Array.from(s).sort((a, b) => a.localeCompare(b)))
+  }, [rows, headers])
+
+  const filtered = rows
+    .filter((r) => r.join(' ').toLowerCase().includes(filter.toLowerCase()))
+    .filter((r) => {
+      // apply per-column filters
+      return Object.entries(colFilters).every(([idxStr, val]) => {
+        const idx = Number(idxStr)
+        if (!val) return true
+        return String(r[idx]) === String(val)
+      })
+    })
+    .sort((a, b) => {
+      const { index, dir } = sort
+      const av = a[index], bv = b[index]
+      const na = Number(av), nb = Number(bv)
+      let cmp
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) cmp = na - nb
+      else cmp = String(av).localeCompare(String(bv))
+      return dir === 'asc' ? cmp : -cmp
+    })
+
+  // pagination
+  const totalRows = filtered.length
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const start = (safePage - 1) * pageSize
+  const end = start + pageSize
+  const pageRows = filtered.slice(start, end)
 
   function exportCsv() {
     const header = ['Stakeholder', 'Variable', 'Total pct', ...environments.map((e) => String(e).charAt(0).toUpperCase() + String(e).slice(1))]
@@ -89,41 +137,84 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
     }
     const out = Object.values(map)
     if (onImport) onImport(out)
+    setImportInfo({ stakeholders: out.length, variables: out.reduce((acc, s) => acc + Object.keys(s.variables||{}).length, 0) })
   }
 
   return (
     <div style={{ padding: 12 }}>
       <h2>Vista tipo Excel</h2>
       <div style={{ marginBottom: 12 }}>
-        <label>Filtro: </label>
-        <input value={filter} onChange={(e) => setFilter(e.target.value)} style={{ marginRight: 12 }} />
+        <label htmlFor="excel-filter">Filtro: </label>
+        <input id="excel-filter" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar…" style={{ marginRight: 12 }} />
         <button onClick={exportCsv}>Exportar CSV</button>
         <label style={{ marginLeft: 12 }}>
           Importar CSV: <input type="file" accept=".csv" onChange={handleFile} />
         </label>
+        {importInfo && (
+          <span style={{ marginLeft: 12, color: '#555' }}>
+            Importados: {importInfo.stakeholders} stakeholders, {importInfo.variables} variables
+          </span>
+        )}
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
-            <tr>
-              <th style={{ border: '1px solid #ddd', padding: 6 }}>Stakeholder</th>
-              <th style={{ border: '1px solid #ddd', padding: 6 }}>Variable</th>
-              <th style={{ border: '1px solid #ddd', padding: 6 }}>Total pct</th>
-              {environments.map((e) => (
-                <th key={e} style={{ border: '1px solid #ddd', padding: 6 }}>{String(e).charAt(0).toUpperCase() + String(e).slice(1)}</th>
+            <tr style={{ position: 'sticky', top: 0, background: '#f8fafc' }}>
+              {headers.map((h, idx) => (
+                <th
+                  key={h}
+                  onClick={() => setSort((prev) => ({ index: idx, dir: prev.index === idx && prev.dir === 'asc' ? 'desc' : 'asc' }))}
+                  style={{ border: '1px solid #ddd', padding: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  title="Ordenar"
+                >
+                  {h} {sort.index === idx ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
+                </th>
+              ))}
+            </tr>
+            <tr style={{ position: 'sticky', top: 34, background: '#f1f5f9' }}>
+              {headers.map((h, idx) => (
+                <th key={`f-${h}`} style={{ border: '1px solid #ddd', padding: 4 }}>
+                  <select
+                    value={colFilters[idx] || ''}
+                    onChange={(e) => { setColFilters((prev) => ({ ...prev, [idx]: e.target.value })); setPage(1) }}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">(Todos)</option>
+                    {uniqueByCol[idx].map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </select>
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r, i) => (
-              <tr key={i}>
-                {r.map((c, j) => (
-                  <td key={j} style={{ border: '1px solid #eee', padding: 6 }}>{c}</td>
-                ))}
+            {pageRows.map((r, i) => (
+              <tr key={i} style={{ background: i % 2 ? '#ffffff' : '#f9fbfd' }}>
+                {r.map((c, j) => {
+                  const isNum = j >= 2
+                  const val = isNum && typeof c === 'number' ? c : Number(c)
+                  const show = isNum && !Number.isNaN(val) ? val : c
+                  return (
+                    <td key={j} style={{ border: '1px solid #eee', padding: 6, textAlign: isNum ? 'right' : 'left' }}>{show}</td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1}>Anterior</button>
+        <span>Página {safePage} de {totalPages}</span>
+        <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages}>Siguiente</button>
+        <span style={{ marginLeft: 12 }}>Filas por página:</span>
+        <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
+          {[10, 20, 50, 100].map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
+        <span style={{ marginLeft: 'auto', color: '#555' }}>{totalRows} filas</span>
       </div>
     </div>
   )
