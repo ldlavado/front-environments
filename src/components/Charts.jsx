@@ -7,6 +7,14 @@ import ChartDataLabels from 'chartjs-plugin-datalabels'
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels)
 
 export default function Charts({ stakeholders = [], environments = [] }) {
+  const cssVar = (name, fallback) => {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+      return v || fallback
+    } catch {
+      return fallback
+    }
+  }
   const [selectedStakeholder, setSelectedStakeholder] = useState(() => (stakeholders[0]?.stakeholder) || '')
 
   const stakeholder = useMemo(() => stakeholders.find((s) => s.stakeholder === selectedStakeholder) || stakeholders[0] || null, [selectedStakeholder, stakeholders])
@@ -66,9 +74,9 @@ export default function Charts({ stakeholders = [], environments = [] }) {
   const doughnutOptions = useMemo(
     () => ({
       plugins: {
-        legend: { position: 'bottom' },
+        legend: { position: 'bottom', labels: { color: cssVar('--chart-legend', '#222') } },
         datalabels: {
-          color: '#222',
+          color: cssVar('--chart-label', '#222'),
           font: { weight: '600' },
           // Mostrar solo si el segmento está visible y el valor es distinto de 0
           display: (context) => {
@@ -98,7 +106,7 @@ export default function Charts({ stakeholders = [], environments = [] }) {
   const varLabels = labels
   const varData = useMemo(() => varLabels.map((l) => Number(vars[l]?.total_pct || 0)), [varLabels, vars])
   const selectedIndex = useMemo(() => (selectedVariable ? varLabels.indexOf(selectedVariable) : -1), [selectedVariable, varLabels])
-  const varColors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f']
+  const varColors = useMemo(() => ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'], [])
   const varPie = useMemo(
     () => ({
       labels: varLabels,
@@ -109,12 +117,12 @@ export default function Charts({ stakeholders = [], environments = [] }) {
           backgroundColor: varLabels.map((_, i) => varColors[i % varColors.length]),
           offset: (ctx) => (ctx.dataIndex === selectedIndex ? 18 : 0),
           hoverOffset: 12,
-          borderColor: (ctx) => (ctx.dataIndex === selectedIndex ? '#222' : '#fff'),
+          borderColor: (ctx) => (ctx.dataIndex === selectedIndex ? cssVar('--chart-slice-border', '#222') : cssVar('--chart-slice-border', '#fff')),
           borderWidth: (ctx) => (ctx.dataIndex === selectedIndex ? 2 : 1),
         },
       ],
     }),
-    [varLabels, varData, selectedIndex, stakeholder],
+    [varLabels, varData, selectedIndex, stakeholder, varColors],
   )
 
   const varPieOptions = useMemo(() => ({
@@ -173,8 +181,8 @@ export default function Charts({ stakeholders = [], environments = [] }) {
                     onClick={() => onVariableClick(l)}
                     style={{
                       cursor: 'pointer',
-                      background: l === selectedVariable ? '#eee' : 'transparent',
-                      border: '1px solid #ccc',
+                      background: l === selectedVariable ? 'var(--highlight-bg)' : 'transparent',
+                      border: '1px solid var(--border)',
                       padding: '6px 8px',
                     }}
                   >
@@ -189,11 +197,11 @@ export default function Charts({ stakeholders = [], environments = [] }) {
               <h3>{selectedVariable ? `Impacto por entorno — ${selectedVariable}` : 'Selecciona una variable'}</h3>
               <Doughnut data={envPie} options={doughnutOptions} />
               {selectedVariable && (
-                <div style={{ marginTop: 8, color: '#555' }}>
+                <div style={{ marginTop: 8, color: 'var(--muted)' }}>
                   Peso de la variable seleccionada: <strong>{Number(vars[selectedVariable]?.total_pct || 0)}%</strong>
                 </div>
               )}
-              <div style={{ marginTop: 8, fontSize: 12, color: '#777' }}>
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted-2)' }}>
                 Nota: este gráfico usa <code>impacto_pct</code> de la variable para repartir el valor por entorno.
               </div>
             </div>
@@ -210,7 +218,7 @@ export default function Charts({ stakeholders = [], environments = [] }) {
                   if (name) onVariableClick(name)
                 }}
               />
-              <div style={{ marginTop: 8, fontSize: 12, color: '#777' }}>
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted-2)' }}>
                 Este gráfico muestra <code>total_pct</code> por variable en el stakeholder. La seleccionada se resalta.
               </div>
             </div>

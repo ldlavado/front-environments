@@ -18,6 +18,14 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 // HHI = sum_i (share_i^2), share_i = contrib_i / total_entorno; Resiliencia = 1 - HHI (0 = concentrado, ~1 = muy distribuido)
 
 export default function EnvironmentResilience({ stakeholders, environments }) {
+  // Theme-aware colors from CSS variables for dark/light modes
+  const rootStyles = typeof window !== 'undefined' ? window.getComputedStyle(document.documentElement) : null
+  const chartTick = (rootStyles?.getPropertyValue('--chart-tick') || '').trim() || '#111827'
+  const chartGrid = (rootStyles?.getPropertyValue('--chart-grid') || '').trim() || 'rgba(0,0,0,0.1)'
+  const chartLabel = (rootStyles?.getPropertyValue('--chart-label') || '').trim() || '#111827'
+  const muted = (rootStyles?.getPropertyValue('--muted') || '').trim() || '#555'
+  const muted2 = (rootStyles?.getPropertyValue('--muted-2') || '').trim() || '#777'
+
   // matriz contribuciones: entorno -> stakeholder -> puntos
   const envShares = useMemo(() => {
     const map = {}
@@ -59,10 +67,11 @@ export default function EnvironmentResilience({ stakeholders, environments }) {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       datalabels: {
-        color: '#222',
+        color: chartLabel,
         anchor: 'end',
         align: 'top',
         formatter: (v) => `${v}%`,
@@ -74,21 +83,27 @@ export default function EnvironmentResilience({ stakeholders, environments }) {
       },
     },
     scales: {
-      y: { beginAtZero: true, max: 100, ticks: { callback: (v) => `${v}%` } },
+      x: { ticks: { color: chartTick }, grid: { color: chartGrid } },
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { color: chartTick, callback: (v) => `${v}%` },
+        grid: { color: chartGrid },
+      },
     },
   }
 
   return (
     <div style={{ padding: 12 }}>
       <h2>Capacidad de resistencia del entorno</h2>
-      <p style={{ color: '#555', marginTop: 4 }}>
+      <p style={{ color: muted, marginTop: 4 }}>
         Medimos la resiliencia como 1 − HHI de la participación de cada stakeholder en el entorno. Valores más altos indican
         que el impacto está más distribuido (más resiliente) y valores bajos indican concentración en pocos actores.
       </p>
-      <div style={{ width: '100%', maxWidth: 820 }}>
+      <div style={{ width: '100%', maxWidth: 960, height: 'clamp(320px, 50vh, 720px)' }}>
         <Bar data={data} options={options} />
       </div>
-      <div style={{ marginTop: 8, fontSize: 12, color: '#777' }}>
+      <div style={{ marginTop: 8, fontSize: 12, color: muted2 }}>
         Nota: participación de stakeholder = contribución en puntos de ese actor al entorno / total de puntos del entorno.
       </div>
     </div>

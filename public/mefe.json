@@ -1,0 +1,66 @@
+{
+  "matriz": "MEFE",
+  "descripcion": "Matriz de Evaluación de Factores Externos",
+  "escala": {
+    "peso": "0.0–1.0 (suma 1.0)",
+    "calificacion": "1–4 (1=respuesta pobre, 4=respuesta superior)",
+    "formula_ponderado": "peso * calificacion"
+  },
+  "factores": [
+    {
+      "id": "FE-OP-01",
+      "tipo": "oportunidad",
+      "origen": "MinTIC",
+      "nombre": "Política de datos e interoperabilidad",
+      "peso": 0.18,
+      "calificacion": 4,
+      "ponderado": 0.72
+    },
+    {
+      "id": "FE-OP-02",
+      "tipo": "oportunidad",
+      "origen": "Proveedor IoT/Cloud",
+      "nombre": "SLA alto y redundancia multi-región",
+      "peso": 0.15,
+      "calificacion": 3,
+      "ponderado": 0.45
+    },
+    {
+      "id": "FE-OP-03",
+      "tipo": "oportunidad",
+      "origen": "Ecosistema",
+      "nombre": "Incentivos a eficiencia energética",
+      "peso": 0.12,
+      "calificacion": 3,
+      "ponderado": 0.36
+    },
+    {
+      "id": "FE-AM-01",
+      "tipo": "amenaza",
+      "origen": "Cliente/Procurement",
+      "nombre": "Restricciones y demoras presupuestales",
+      "peso": 0.20,
+      "calificacion": 2,
+      "ponderado": 0.40
+    },
+    {
+      "id": "FE-AM-02",
+      "tipo": "amenaza",
+      "origen": "Regulatorio",
+      "nombre": "Exigencias de cumplimiento y privacidad",
+      "peso": 0.18,
+      "calificacion": 2,
+      "ponderado": 0.36
+    },
+    {
+      "id": "FE-AM-03",
+      "tipo": "amenaza",
+      "origen": "Operación",
+      "nombre": "Resistencia al cambio del personal",
+      "peso": 0.17,
+      "calificacion": 3,
+      "ponderado": 0.51
+    }
+  ],
+  "total": 2.80
+}

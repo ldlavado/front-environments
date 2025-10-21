@@ -1,0 +1,57 @@
+{
+  "matriz": "MPC",
+  "descripcion": "Matriz de Perfil Competitivo",
+  "competidores": [
+    { "id": "C-01", "nombre": "Proveedor A (Suite PdM)" },
+    { "id": "C-02", "nombre": "Proveedor B (IoT + BI)" },
+    { "id": "C-03", "nombre": "Proyecto interno" }
+  ],
+  "escala": {
+    "peso": "0.0–1.0 (suma 1.0)",
+    "calificacion": "1–4",
+    "nota": "Total ponderado por competidor = sum(peso_i * calif_i)"
+  },
+  "factores": [
+    {
+      "id": "MPC-01",
+      "nombre": "Interoperabilidad (APIs/SDKs)",
+      "peso": 0.18,
+      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 2 }
+    },
+    {
+      "id": "MPC-02",
+      "nombre": "Seguridad y cumplimiento",
+      "peso": 0.16,
+      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2 }
+    },
+    {
+      "id": "MPC-03",
+      "nombre": "Coste total (TCO)",
+      "peso": 0.14,
+      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4 }
+    },
+    {
+      "id": "MPC-04",
+      "nombre": "Soporte/servicio",
+      "peso": 0.18,
+      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2 }
+    },
+    {
+      "id": "MPC-05",
+      "nombre": "Escalabilidad",
+      "peso": 0.17,
+      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 2 }
+    },
+    {
+      "id": "MPC-06",
+      "nombre": "Lock-in / portabilidad",
+      "peso": 0.17,
+      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4 }
+    }
+  ],
+  "totales_ponderados": [
+    { "competidor": "C-01", "total": 3.03 },
+    { "competidor": "C-02", "total": 3.35 },
+    { "competidor": "C-03", "total": 2.62 }
+  ]
+}

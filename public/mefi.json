@@ -1,0 +1,61 @@
+{
+  "matriz": "MEFI",
+  "descripcion": "Matriz de Evaluación de Factores Internos",
+  "escala": {
+    "peso": "0.0–1.0 (suma 1.0)",
+    "calificacion": "1–4 (1=mala, 4=superior)",
+    "formula_ponderado": "peso * calificacion"
+  },
+  "factores": [
+    {
+      "id": "FI-01",
+      "tipo": "fortaleza",
+      "nombre": "Equipo TI con experiencia en IoT/IA para PdM",
+      "peso": 0.18,
+      "calificacion": 3,
+      "ponderado": 0.54,
+      "evidencia": ["Capacidad para integrar sensores y analítica"]
+    },
+    {
+      "id": "FI-02",
+      "tipo": "fortaleza",
+      "nombre": "Arquitectura cloud con buenas prácticas DevOps",
+      "peso": 0.16,
+      "calificacion": 4,
+      "ponderado": 0.64
+    },
+    {
+      "id": "FI-03",
+      "tipo": "fortaleza",
+      "nombre": "Gobierno de datos y trazabilidad básica",
+      "peso": 0.12,
+      "calificacion": 3,
+      "ponderado": 0.36
+    },
+    {
+      "id": "FI-04",
+      "tipo": "debilidad",
+      "nombre": "Madurez limitada en gestión del cambio",
+      "peso": 0.18,
+      "calificacion": 2,
+      "ponderado": 0.36
+    },
+    {
+      "id": "FI-05",
+      "tipo": "debilidad",
+      "nombre": "Brecha en métricas de negocio (MTBF/MTTR) consolidadas",
+      "peso": 0.20,
+      "calificacion": 2,
+      "ponderado": 0.40
+    },
+    {
+      "id": "FI-06",
+      "tipo": "debilidad",
+      "nombre": "Onboarding de usuarios finales aún incipiente",
+      "peso": 0.16,
+      "calificacion": 3,
+      "ponderado": 0.48
+    }
+  ],
+  "total": 2.78
+}

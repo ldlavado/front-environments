@@ -8,6 +8,12 @@ import Heatmap from './components/Heatmap'
 import RadarProfile from './components/RadarProfile'
 import SimilarityMatrix from './components/SimilarityMatrix'
 import SankeySimple from './components/SankeySimple'
+import DofaMatrix from './components/DofaMatrix'
+import MefiMatrix from './components/MefiMatrix'
+import MefeMatrix from './components/MefeMatrix'
+import MafeMatrix from './components/MafeMatrix'
+import MpcMatrix from './components/MpcMatrix'
+import MmlMatrix from './components/MmlMatrix'
 import StakeholderEditor from './components/StakeholderEditor'
 import ExcelView from './components/ExcelView'
 import EnvironmentResilience from './components/EnvironmentResilience'
@@ -16,9 +22,13 @@ import Navbar from './components/Navbar'
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
   const [envs, setEnvs] = useState(environments)
+  const [resetVersion, setResetVersion] = useState(0)
   const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'dark'
-    return localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    // prefer saved theme, else OS preference
+    const saved = localStorage.getItem('theme')
+    if (saved === 'light' || saved === 'dark') return saved
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
   })
 
   // cargar desde JSON público al montar
@@ -34,52 +44,74 @@ function App() {
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const routes = useMemo(() => ([
-    { key: 'charts', title: 'Charts' },
-    { key: 'environment-impact', title: 'Impacto por entorno' },
-    { key: 'excel', title: 'Excel' },
-    { key: 'stacked', title: 'Comparativa por entorno' },
-    { key: 'heatmap', title: 'Heatmap' },
-    { key: 'radar', title: 'Radar' },
-    { key: 'sim', title: 'Similitud' },
-    { key: 'sankey', title: 'Sankey (texto)' },
-    { key: 'editor', title: 'Editor' },
-    { key: 'resilience', title: 'Resiliencia' },
+  // Agrupar tabs en dos secciones: Entornos y Análisis matricial
+  const groups = useMemo(() => ([
+    {
+      label: 'Entornos',
+      items: [
+        { key: 'charts', title: 'Charts' },
+        { key: 'environment-impact', title: 'Impacto por entorno' },
+        { key: 'excel', title: 'Excel' },
+        { key: 'stacked', title: 'Comparativa por entorno' },
+        { key: 'heatmap', title: 'Heatmap' },
+        { key: 'radar', title: 'Radar' },
+        { key: 'editor', title: 'Editor' },
+        { key: 'resilience', title: 'Resiliencia' },
+      ]
+    },
+    {
+      label: 'Análisis matricial',
+      items: [
+        { key: 'dofa', title: 'Matriz DOFA' },
+        { key: 'mefi', title: 'Matriz MEFI' },
+        { key: 'mefe', title: 'Matriz MEFE' },
+        { key: 'mafe', title: 'Matriz MAFE' },
+        { key: 'mpc', title: 'Matriz MPC' },
+        { key: 'mml', title: 'Matriz MML' },
+        { key: 'sim', title: 'Similitud' },
+        { key: 'sankey', title: 'Sankey (texto)' },
+      ]
+    }
   ]), [])
+
+  // Rutas aplanadas para manejo de hash y validación
+  const flatRoutes = useMemo(() => groups.flatMap(g => g.items), [groups])
 
   const initialTab = useMemo(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : ''
-    const exists = routes.some(r => r.key === hash)
+    const exists = flatRoutes.some(r => r.key === hash)
     return exists ? hash : 'charts'
-  }, [routes])
+  }, [flatRoutes])
 
   const [tab, setTab] = useState(initialTab)
 
   useEffect(() => {
     const onHashChange = () => {
       const next = window.location.hash.replace('#', '')
-      if (routes.some(r => r.key === next)) setTab(next)
+      if (flatRoutes.some(r => r.key === next)) setTab(next)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [routes])
+  }, [flatRoutes])
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash.replace('#','') !== tab) {
+    if (typeof window !== 'undefined' && window.location.hash.replace('#', '') !== tab) {
       window.location.hash = tab
     }
   }, [tab])
 
+  async function restoreDefaults() {
+    try { localStorage.removeItem('stakeholders_edit') } catch { console.warn('No se pudo limpiar stakeholders_edit') }
+    const { stakeholders: sts, environments: envsLoaded } = await loadDefaultData()
+    setEditableStakeholders(sts)
+    setEnvs(envsLoaded)
+    setResetVersion((v) => v + 1) // fuerza remount del editor
+  }
+
   return (
     <div style={{ padding: 24 }}>
-      <Navbar items={routes} current={tab} onNavigate={setTab} />
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-        <button onClick={async () => {
-          const { stakeholders: sts, environments: envsLoaded } = await loadDefaultData()
-          setEditableStakeholders(sts)
-          setEnvs(envsLoaded)
-        }}>Restaurar datos por defecto</button>
-      </div>
+      <Navbar groups={groups} current={tab} onNavigate={setTab} onRestore={restoreDefaults} />
+      <div style={{ height: 8 }} />
 
       {/* Floating theme toggle */}
       <button
@@ -95,19 +127,25 @@ function App() {
         {theme === 'dark' ? '🌞' : '🌙'}
       </button>
 
-  {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={envs} />}
+      {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'environment-impact' && (
         <EnvironmentImpact stakeholders={editableStakeholders} environments={envs} />
       )}
-  {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={envs} />}
-  {tab === 'excel' && <ExcelView stakeholders={editableStakeholders} environments={envs} onImport={setEditableStakeholders} />}
+      {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={envs} />}
+      {tab === 'excel' && <ExcelView stakeholders={editableStakeholders} environments={envs} onImport={setEditableStakeholders} />}
       {tab === 'heatmap' && <Heatmap stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'radar' && <RadarProfile stakeholders={editableStakeholders} environments={envs} />}
-      
-    {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={envs} />}
-    {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={envs} />}
-    {tab === 'editor' && <StakeholderEditor stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
-  {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
+
+      {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={envs} />}
+      {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={envs} />}
+  {tab === 'dofa' && <DofaMatrix />}
+  {tab === 'mefi' && <MefiMatrix />}
+  {tab === 'mefe' && <MefeMatrix />}
+  {tab === 'mafe' && <MafeMatrix />}
+  {tab === 'mpc' && <MpcMatrix />}
+  {tab === 'mml' && <MmlMatrix />}
+      {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
+      {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>
   )
 }

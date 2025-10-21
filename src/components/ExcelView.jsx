@@ -151,7 +151,7 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
           Importar CSV: <input type="file" accept=".csv" onChange={handleFile} />
         </label>
         {importInfo && (
-          <span style={{ marginLeft: 12, color: '#555' }}>
+          <span style={{ marginLeft: 12, color: 'var(--muted)' }}>
             Importados: {importInfo.stakeholders} stakeholders, {importInfo.variables} variables
           </span>
         )}
@@ -159,21 +159,21 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
-            <tr style={{ position: 'sticky', top: 0, background: '#f8fafc' }}>
+            <tr style={{ position: 'sticky', top: 0, background: 'var(--surface)' }}>
               {headers.map((h, idx) => (
                 <th
                   key={h}
                   onClick={() => setSort((prev) => ({ index: idx, dir: prev.index === idx && prev.dir === 'asc' ? 'desc' : 'asc' }))}
-                  style={{ border: '1px solid #ddd', padding: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  style={{ border: '1px solid var(--border)', padding: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   title="Ordenar"
                 >
                   {h} {sort.index === idx ? (sort.dir === 'asc' ? '▲' : '▼') : ''}
                 </th>
               ))}
             </tr>
-            <tr style={{ position: 'sticky', top: 34, background: '#f1f5f9' }}>
+            <tr style={{ position: 'sticky', top: 34, background: 'var(--card-bg)' }}>
               {headers.map((h, idx) => (
-                <th key={`f-${h}`} style={{ border: '1px solid #ddd', padding: 4 }}>
+                <th key={`f-${h}`} style={{ border: '1px solid var(--border)', padding: 4 }}>
                   <select
                     value={colFilters[idx] || ''}
                     onChange={(e) => { setColFilters((prev) => ({ ...prev, [idx]: e.target.value })); setPage(1) }}
@@ -190,13 +190,13 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
           </thead>
           <tbody>
             {pageRows.map((r, i) => (
-              <tr key={i} style={{ background: i % 2 ? '#ffffff' : '#f9fbfd' }}>
+              <tr key={i} style={{ background: i % 2 ? 'transparent' : 'var(--highlight-bg)' }}>
                 {r.map((c, j) => {
                   const isNum = j >= 2
                   const val = isNum && typeof c === 'number' ? c : Number(c)
                   const show = isNum && !Number.isNaN(val) ? val : c
                   return (
-                    <td key={j} style={{ border: '1px solid #eee', padding: 6, textAlign: isNum ? 'right' : 'left' }}>{show}</td>
+                    <td key={j} style={{ border: '1px solid var(--border)', padding: 6, textAlign: isNum ? 'right' : 'left' }}>{show}</td>
                   )
                 })}
               </tr>
@@ -214,7 +214,7 @@ export default function ExcelView({ stakeholders, environments, onImport }) {
             <option key={n} value={n}>{n}</option>
           ))}
         </select>
-        <span style={{ marginLeft: 'auto', color: '#555' }}>{totalRows} filas</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--muted)' }}>{totalRows} filas</span>
       </div>
     </div>
   )

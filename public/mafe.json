@@ -1,0 +1,54 @@
+{
+  "matriz": "MAFE",
+  "descripcion": "Cruzamiento estratégico FO/DO/FA/DA a partir de DOFA",
+  "estrategias": {
+    "FO": [
+      {
+        "id": "FO-01",
+        "cruce": { "F": ["FI-01", "FI-02"], "O": ["FE-OP-01", "FE-OP-02"] },
+        "enunciado": "Acelerar interoperabilidad y despliegue HA/DR usando el equipo IoT/IA y la arquitectura cloud."
+      },
+      {
+        "id": "FO-02",
+        "cruce": { "F": ["FI-03"], "O": ["FE-OP-03"] },
+        "enunciado": "Vincular el gobierno de datos a programas de eficiencia energética y medición."
+      }
+    ],
+    "DO": [
+      {
+        "id": "DO-01",
+        "cruce": { "D": ["FI-04"], "O": ["FE-OP-01"] },
+        "enunciado": "Apalancar estándares abiertos para facilitar adopción y gestión del cambio."
+      },
+      {
+        "id": "DO-02",
+        "cruce": { "D": ["FI-05"], "O": ["FE-OP-02", "FE-OP-03"] },
+        "enunciado": "Construir un datamart de MTBF/MTTR y ahorro energético con data fiable de la plataforma."
+      }
+    ],
+    "FA": [
+      {
+        "id": "FA-01",
+        "cruce": { "F": ["FI-01"], "A": ["FE-AM-01"] },
+        "enunciado": "Diseñar casos de negocio técnicos que mitiguen objeciones de presupuesto (uptime, TCO)."
+      },
+      {
+        "id": "FA-02",
+        "cruce": { "F": ["FI-02", "FI-03"], "A": ["FE-AM-02"] },
+        "enunciado": "Endurecer seguridad y trazabilidad para cumplir normativa sin frenar el roadmap."
+      }
+    ],
+    "DA": [
+      {
+        "id": "DA-01",
+        "cruce": { "D": ["FI-04", "FI-06"], "A": ["FE-AM-03"] },
+        "enunciado": "Plan de cambio progresivo y onboarding guiado con quick wins operativos."
+      },
+      {
+        "id": "DA-02",
+        "cruce": { "D": ["FI-05"], "A": ["FE-AM-01", "FE-AM-02"] },
+        "enunciado": "Fases con hitos medibles y controles de cumplimiento para asegurar liberación de presupuesto."
+      }
+    ]
+  }
+}

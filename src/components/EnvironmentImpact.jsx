@@ -63,7 +63,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
     indexAxis: 'y',
     responsive: true,
     plugins: {
-      legend: { display: false },
+      legend: { display: false, labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-legend') || '#222' } },
       title: { display: false },
       tooltip: {
         callbacks: {
@@ -72,7 +72,8 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
       },
     },
     scales: {
-      x: { max: 100, ticks: { callback: (v) => `${v}%` } },
+      x: { max: 100, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222', callback: (v) => `${v}%` }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
+      y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222' }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
     },
   }
 
@@ -128,7 +129,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
   )
 
   // Stacked bar: una sola categoría con datasets por variable donde cada valor es (pts_var / sumTotal_env) * 100
-  const palette = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f', '#ffa600', '#8ad1c2', '#ffd166', '#f28b82']
+  const palette = useMemo(() => ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f', '#ffa600', '#8ad1c2', '#ffd166', '#f28b82'], [])
   const varShareStackedData = useMemo(
     () => ({
       labels: ['% sobre el entorno'],
@@ -139,7 +140,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
         stack: 'vars',
       })),
     }),
-    [allVarPairs, sumTotal],
+    [allVarPairs, sumTotal, palette],
   )
 
   const varShareStackedOptions = useMemo(
@@ -154,7 +155,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
           },
         },
         datalabels: {
-          color: '#222',
+          color: getComputedStyle(document.documentElement).getPropertyValue('--chart-label') || '#222',
           anchor: 'center',
           align: 'center',
           formatter: (v) => `${Number(v).toFixed(1)}%`,
@@ -162,8 +163,8 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
         },
       },
       scales: {
-        x: { stacked: true, max: 100, ticks: { callback: (v) => `${v}%` } },
-        y: { stacked: true },
+        x: { stacked: true, max: 100, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222', callback: (v) => `${v}%` }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
+        y: { stacked: true, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222' }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
       },
     }),
     [],
@@ -199,7 +200,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
           },
         },
         datalabels: {
-          color: '#222',
+          color: getComputedStyle(document.documentElement).getPropertyValue('--chart-label') || '#222',
           anchor: 'end',
           align: 'right',
           formatter: (v) => {
@@ -210,7 +211,8 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
         },
       },
       scales: {
-        x: { beginAtZero: true },
+        x: { beginAtZero: true, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222' }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
+        y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick') || '#222' }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid') || '#ddd' } },
       },
     }),
     [stakeholderEnvTotal],
@@ -235,7 +237,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
           <strong>Stakeholder con mayor incidencia:</strong>
           <div style={{ marginTop: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 18 }}>{top.stakeholder}</span>
-            <span style={{ marginLeft: 12, color: '#555' }}>
+            <span style={{ marginLeft: 12, color: 'var(--muted)' }}>
               ({top.total} pts — {sumTotal > 0 ? ((top.total / sumTotal) * 100).toFixed(1) : 0}%)
             </span>
           </div>
@@ -285,7 +287,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
               </div>
               {varPairs.length === 0 && (
                 <div style={{ marginTop: 8, fontSize: 12 }}>
-                  <span style={{ color: '#777' }}>
+                  <span style={{ color: 'var(--muted-2)' }}>
                     No hay variables que influyan {onlyExclusive ? 'exclusivamente ' : ''}en "{env}" para {selectedName}.
                   </span>
                   {onlyExclusive && (
@@ -310,11 +312,11 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
                 <div style={{ width: '100%', maxWidth: 840 }}>
                   <Bar data={varShareStackedData} options={varShareStackedOptions} />
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: '#555' }}>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
                   {selectedStakeholderTotalPts} pts de {selectedName} en "{env}" divididos entre el total del entorno ({sumTotal} pts)
                   dan {(stakeholderPctOverEnv).toFixed(1)}%. Cada segmento de color muestra el aporte de una variable a ese porcentaje.
                 </div>
-                <div style={{ marginTop: 4, fontSize: 12, color: '#777' }}>
+                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--muted-2)' }}>
                   Esta descomposición usa todas las variables con aporte &gt; 0 en este entorno (no aplica el filtro de exclusivas).
                 </div>
               </div>

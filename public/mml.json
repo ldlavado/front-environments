@@ -1,0 +1,57 @@
+{
+  "matriz": "MML",
+  "descripcion": "Matriz de Marco Lógico (Fin, Propósito, Resultados/Componentes, Actividades, Indicadores, Medios de Verificación, Supuestos)",
+  "fin": {
+    "enunciado": "Mejorar sostenibilidad operativa y energética en infraestructura HVAC",
+    "indicadores": [
+      { "id": "FIN-1", "nombre": "Reducción de consumo energético (%)", "meta": "≥15% anual", "medio_verificacion": "Facturación y medidores IoT" }
+    ],
+    "supuestos": ["Estabilidad regulatoria y precios de energía"]
+  },
+  "proposito": {
+    "enunciado": "Reducir costos de mantenimiento y tiempos de inactividad mediante PdM",
+    "indicadores": [
+      { "id": "PRO-1", "nombre": "Reducción costos de mantenimiento (%)", "meta": "≥20%", "medio_verificacion": "ERP/contabilidad" },
+      { "id": "PRO-2", "nombre": "MTBF (horas)", "meta": "+25%", "medio_verificacion": "CMMS/Sistema PdM" }
+    ],
+    "supuestos": ["Disponibilidad de datos operativos", "Adopción del personal de O&M"]
+  },
+  "componentes": [
+    {
+      "id": "COMP-1",
+      "resultado": "Plataforma IoT/IA operativa (ingesta, analítica, alertas)",
+      "indicadores": [
+        { "id": "RES-1", "nombre": "Exactitud de predicción de fallas (F1)", "meta": "≥0.80", "medio_verificacion": "Logs de model serving" }
+      ],
+      "supuestos": ["SLA de nube y ciberseguridad vigentes"]
+    },
+    {
+      "id": "COMP-2",
+      "resultado": "Datamart de confiabilidad y energía (MTBF/MTTR/consumo)",
+      "indicadores": [
+        { "id": "RES-2", "nombre": "Cobertura de telemetría (%)", "meta": "≥90%", "medio_verificacion": "Inventario y monitoreo" }
+      ],
+      "supuestos": ["Calidad de datos sostenida"]
+    }
+  ],
+  "actividades": [
+    {
+      "id": "ACT-1",
+      "descripcion": "Despliegue de sensores críticos y conectividad segura",
+      "insumos": ["Sensores, gateway, nube"],
+      "supuestos": ["Permisos de intervención y CAPEX disponible"]
+    },
+    {
+      "id": "ACT-2",
+      "descripcion": "Entrenamiento de modelos PdM y pipeline MLOps",
+      "insumos": ["Datos históricos, ETL/feature store, orquestación"],
+      "supuestos": ["Históricos suficientes y etiquetados"]
+    },
+    {
+      "id": "ACT-3",
+      "descripcion": "Onboarding y gestión del cambio",
+      "insumos": ["Manual de usuario, runbooks, talleres"],
+      "supuestos": ["Disponibilidad del personal y patrocinio gerencial"]
+    }
+  ]
+}

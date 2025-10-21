@@ -1,11 +1,26 @@
 :root {
+  /* base */
   --bg: #242424;
-  --fg: rgba(255, 255, 255, 0.87);
+  --fg: rgba(255, 255, 255, 0.9);
   --btn-bg: #1a1a1a;
-  --link: #646cff;
-  --link-hover: #535bf2;
+  --btn-fg: var(--fg);
+  --link: #8aa2ff;
+  --link-hover: #a0afff;
   --card-bg: #0f172a;
   --card-fg: #e2e8f0;
+  --surface: #151a2b;
+  --surface-fg: var(--fg);
+  --border: #2a2f45;
+  --muted: rgba(255, 255, 255, 0.7);
+  --muted-2: rgba(255, 255, 255, 0.55);
+  --highlight-bg: #2a2f45;
+
+  /* charts */
+  --chart-grid: #3a3f59;
+  --chart-tick: rgba(255, 255, 255, 0.8);
+  --chart-legend: rgba(255, 255, 255, 0.9);
+  --chart-label: rgba(0, 0, 0, 0.9); /* labels inside slices, prefer dark-on-light sector colors */
+  --chart-slice-border: rgba(0, 0, 0, 0.5);
 
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -21,22 +36,48 @@
 
 :root[data-theme='light'] {
   --bg: #ffffff;
-  --fg: #213547;
-  --btn-bg: #f9f9f9;
-  --link: #646cff;
-  --link-hover: #747bff;
+  --fg: #0f172a;
+  --btn-bg: #f8fafc;
+  --btn-fg: #0f172a;
+  --link: #4650ff;
+  --link-hover: #3038ff;
   --card-bg: #f1f5f9;
   --card-fg: #0f172a;
+  --surface: #ffffff;
+  --surface-fg: #0f172a;
+  --border: #d2d6dc;
+  --muted: #475569;
+  --muted-2: #64748b;
+  --highlight-bg: #e5e7eb;
+
+  --chart-grid: #e5e7eb;
+  --chart-tick: #111827;
+  --chart-legend: #111827;
+  --chart-label: #111827;
+  --chart-slice-border: rgba(255, 255, 255, 0.9);
 }
 
 :root[data-theme='dark'] {
-  --bg: #242424;
-  --fg: rgba(255,255,255,0.87);
-  --btn-bg: #1a1a1a;
-  --link: #646cff;
-  --link-hover: #535bf2;
+  --bg: #0b1020;
+  --fg: rgba(255,255,255,0.92);
+  --btn-bg: #141a2f;
+  --btn-fg: rgba(255,255,255,0.92);
+  --link: #8aa2ff;
+  --link-hover: #a0afff;
   --card-bg: #0f172a;
   --card-fg: #e2e8f0;
+  --surface: #121935;
+  --surface-fg: rgba(255,255,255,0.92);
+  --border: #2a2f45;
+  --muted: rgba(255,255,255,0.75);
+  --muted-2: rgba(255,255,255,0.6);
+  --highlight-bg: #1e2642;
+
+  --chart-grid: #2a2f45;
+  --chart-tick: rgba(255,255,255,0.9);
+  --chart-legend: rgba(255,255,255,0.92);
+  --chart-label: rgba(0,0,0,0.9);
+  --chart-slice-border: rgba(0, 0, 0, 0.5);
 }
 
 a {
@@ -54,6 +95,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -69,6 +111,7 @@ button {
   font-weight: 500;
   font-family: inherit;
   background-color: var(--btn-bg);
+  color: var(--btn-fg);
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -81,3 +124,24 @@ button:focus-visible {
 }
 
 /* The media query remains a fallback; explicit data-theme overrides above take precedence */
+
+/* form controls */
+input, select, textarea {
+  background-color: var(--surface);
+  color: var(--surface-fg);
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--link);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--link) 25%, transparent);
+}
+
+table {
+  color: inherit;
+}
+th, td {
+  color: inherit;
+}

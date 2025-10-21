@@ -1,0 +1,24 @@
+{
+  "matriz": "DOFA",
+  "descripcion": "Listado cualitativo de Fortalezas, Oportunidades, Debilidades y Amenazas",
+  "fortalezas": [
+    { "id": "FI-01", "texto": "Equipo TI con experiencia en IoT/IA para PdM" },
+    { "id": "FI-02", "texto": "Arquitectura cloud con buenas prácticas DevOps" },
+    { "id": "FI-03", "texto": "Gobierno de datos y trazabilidad básica" }
+  ],
+  "oportunidades": [
+    { "id": "FE-OP-01", "texto": "Política de datos e interoperabilidad (MinTIC)" },
+    { "id": "FE-OP-02", "texto": "SLA alto y redundancia multi-región (Proveedor Cloud)" },
+    { "id": "FE-OP-03", "texto": "Incentivos a eficiencia energética" }
+  ],
+  "debilidades": [
+    { "id": "FI-04", "texto": "Madurez limitada en gestión del cambio" },
+    { "id": "FI-05", "texto": "Brecha en métricas de negocio consolidadas" },
+    { "id": "FI-06", "texto": "Onboarding de usuarios finales incipiente" }
+  ],
+  "amenazas": [
+    { "id": "FE-AM-01", "texto": "Restricciones/demoras presupuestales" },
+    { "id": "FE-AM-02", "texto": "Exigencias de cumplimiento y privacidad" },
+    { "id": "FE-AM-03", "texto": "Resistencia al cambio del personal" }
+  ]
+}
