@@ -16,6 +16,10 @@ import Navbar from './components/Navbar'
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
   const [envs, setEnvs] = useState(environments)
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'dark'
+    return localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+  })
 
   // cargar desde JSON público al montar
   useEffect(() => {
@@ -24,6 +28,11 @@ function App() {
       setEnvs(envsLoaded)
     })
   }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   const routes = useMemo(() => ([
     { key: 'charts', title: 'Charts' },
@@ -71,6 +80,20 @@ function App() {
           setEnvs(envsLoaded)
         }}>Restaurar datos por defecto</button>
       </div>
+
+      {/* Floating theme toggle */}
+      <button
+        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        aria-label="Alternar tema"
+        title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}
+        style={{
+          position: 'fixed', right: 16, bottom: 16, zIndex: 50,
+          padding: '10px 12px', borderRadius: '999px',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.25)'
+        }}
+      >
+        {theme === 'dark' ? '🌞' : '🌙'}
+      </button>
 
   {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'environment-impact' && (

@@ -1,25 +1,51 @@
 :root {
+  --bg: #242424;
+  --fg: rgba(255, 255, 255, 0.87);
+  --btn-bg: #1a1a1a;
+  --link: #646cff;
+  --link-hover: #535bf2;
+  --card-bg: #0f172a;
+  --card-fg: #e2e8f0;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: var(--fg);
+  background-color: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --fg: #213547;
+  --btn-bg: #f9f9f9;
+  --link: #646cff;
+  --link-hover: #747bff;
+  --card-bg: #f1f5f9;
+  --card-fg: #0f172a;
+}
+
+:root[data-theme='dark'] {
+  --bg: #242424;
+  --fg: rgba(255,255,255,0.87);
+  --btn-bg: #1a1a1a;
+  --link: #646cff;
+  --link-hover: #535bf2;
+  --card-bg: #0f172a;
+  --card-fg: #e2e8f0;
+}
+
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--link);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--link-hover);
 }
 
 body {
@@ -42,7 +68,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--btn-bg);
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -54,15 +80,4 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* The media query remains a fallback; explicit data-theme overrides above take precedence */
