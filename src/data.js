@@ -252,3 +252,17 @@ export const stakeholders = [
 ]
 
 export const environments = ['politico','económico','técnico','social','ambiental','legal']
+
+// Carga dinámica desde public/default-data.json con fallback a lo embebido
+export async function loadDefaultData() {
+  try {
+    const res = await fetch('/default-data.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    const json = await res.json()
+    const sts = Array.isArray(json.stakeholders) ? json.stakeholders : stakeholders
+    const envs = Array.isArray(json.environments) ? json.environments : environments
+    return { stakeholders: sts, environments: envs }
+  } catch (e) {
+    return { stakeholders, environments }
+  }
+}

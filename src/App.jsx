@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { stakeholders, environments } from './data'
+import { stakeholders, environments, loadDefaultData } from './data'
 import Charts from './components/Charts'
 import EnvironmentImpact from './components/EnvironmentImpact'
 import StackedEnvironments from './components/StackedEnvironments'
@@ -15,6 +15,15 @@ import Navbar from './components/Navbar'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
+  const [envs, setEnvs] = useState(environments)
+
+  // cargar desde JSON público al montar
+  useEffect(() => {
+    loadDefaultData().then(({ stakeholders: sts, environments: envsLoaded }) => {
+      setEditableStakeholders(sts)
+      setEnvs(envsLoaded)
+    })
+  }, [])
 
   const routes = useMemo(() => ([
     { key: 'charts', title: 'Charts' },
@@ -55,20 +64,27 @@ function App() {
   return (
     <div style={{ padding: 24 }}>
       <Navbar items={routes} current={tab} onNavigate={setTab} />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+        <button onClick={async () => {
+          const { stakeholders: sts, environments: envsLoaded } = await loadDefaultData()
+          setEditableStakeholders(sts)
+          setEnvs(envsLoaded)
+        }}>Restaurar datos por defecto</button>
+      </div>
 
-  {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={environments} />}
+  {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'environment-impact' && (
-        <EnvironmentImpact stakeholders={editableStakeholders} environments={environments} />
+        <EnvironmentImpact stakeholders={editableStakeholders} environments={envs} />
       )}
-  {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={environments} />}
-  {tab === 'excel' && <ExcelView stakeholders={editableStakeholders} environments={environments} onImport={setEditableStakeholders} />}
-      {tab === 'heatmap' && <Heatmap stakeholders={editableStakeholders} environments={environments} />}
-      {tab === 'radar' && <RadarProfile stakeholders={editableStakeholders} environments={environments} />}
+  {tab === 'stacked' && <StackedEnvironments stakeholders={editableStakeholders} environments={envs} />}
+  {tab === 'excel' && <ExcelView stakeholders={editableStakeholders} environments={envs} onImport={setEditableStakeholders} />}
+      {tab === 'heatmap' && <Heatmap stakeholders={editableStakeholders} environments={envs} />}
+      {tab === 'radar' && <RadarProfile stakeholders={editableStakeholders} environments={envs} />}
       
-      {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={environments} />}
-      {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={environments} />}
-      {tab === 'editor' && <StakeholderEditor stakeholders={editableStakeholders} environments={environments} onChange={setEditableStakeholders} />}
-  {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={environments} />}
+    {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={envs} />}
+    {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={envs} />}
+    {tab === 'editor' && <StakeholderEditor stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
+  {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>
   )
 }
