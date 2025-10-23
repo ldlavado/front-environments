@@ -219,7 +219,7 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
   )
 
   return (
-    <div style={{ marginTop: 24, padding: 12, border: '1px solid #ddd', borderRadius: 6 }}>
+    <section className="card" style={{ marginTop: 24 }}>
       <h2>Impacto por entorno</h2>
       <div style={{ marginBottom: 12 }}>
         <label htmlFor="env-select">Entorno: </label>
@@ -326,6 +326,6 @@ export default function EnvironmentImpact({ stakeholders, environments }) {
       ) : (
         <div>No hay datos</div>
       )}
-    </div>
+    </section>
   )
 }

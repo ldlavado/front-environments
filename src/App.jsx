@@ -23,13 +23,6 @@ function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
   const [envs, setEnvs] = useState(environments)
   const [resetVersion, setResetVersion] = useState(0)
-  const [theme, setTheme] = useState(() => {
-    // prefer saved theme, else OS preference
-    const saved = localStorage.getItem('theme')
-    if (saved === 'light' || saved === 'dark') return saved
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    return prefersDark ? 'dark' : 'light'
-  })
 
   // cargar desde JSON público al montar
   useEffect(() => {
@@ -39,10 +32,7 @@ function App() {
     })
   }, [])
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
-  }, [theme])
+  // Tema único claro: no es necesario setear atributos
 
   // Agrupar tabs en dos secciones: Entornos y Análisis matricial
   const groups = useMemo(() => ([
@@ -113,19 +103,7 @@ function App() {
       <Navbar groups={groups} current={tab} onNavigate={setTab} onRestore={restoreDefaults} />
       <div style={{ height: 8 }} />
 
-      {/* Floating theme toggle */}
-      <button
-        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-        aria-label="Alternar tema"
-        title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}
-        style={{
-          position: 'fixed', right: 16, bottom: 16, zIndex: 50,
-          padding: '10px 12px', borderRadius: '999px',
-          boxShadow: '0 6px 16px rgba(0,0,0,0.25)'
-        }}
-      >
-        {theme === 'dark' ? '🌞' : '🌙'}
-      </button>
+      {/* Tema fijo en claro; se elimina el botón de alternancia */}
 
       {tab === 'charts' && <Charts stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'environment-impact' && (

@@ -262,7 +262,7 @@ export async function loadDefaultData() {
     const sts = Array.isArray(json.stakeholders) ? json.stakeholders : stakeholders
     const envs = Array.isArray(json.environments) ? json.environments : environments
     return { stakeholders: sts, environments: envs }
-  } catch (e) {
+  } catch {
     return { stakeholders, environments }
   }
 }

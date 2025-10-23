@@ -85,14 +85,6 @@ export default function MafeMatrix({ data }) {
   ]), [])
 
   const styles = {
-    card: {
-      background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '#0b1220',
-      color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg') || '#e5e7eb',
-      border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#253050'}`,
-      borderRadius: 10,
-      padding: 12,
-      boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
-    },
     modalOverlay: {
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
     },
@@ -312,7 +304,7 @@ export default function MafeMatrix({ data }) {
           const arr = (d.estrategias?.[sec.key] || []).map(es => ({ ...es, score: computeScore(es) }))
           arr.sort((a,b) => b.score - a.score)
           return (
-            <section key={sec.key} style={styles.card}>
+            <section key={sec.key} className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontWeight: 700 }}>{sec.title}</div>
                 <div style={{ opacity: 0.8, fontSize: 12 }}>Total: {arr.length}</div>

@@ -101,7 +101,7 @@ export default function RadarProfile({ stakeholders, environments }) {
   }), [])
 
   return (
-    <div style={{ padding: 12 }}>
+    <section className="card" style={{ padding: 12 }}>
       <h2>Perfil radar por stakeholder</h2>
       <div style={{ marginBottom: 8 }}>
         <label>Stakeholder: </label>
@@ -130,6 +130,6 @@ export default function RadarProfile({ stakeholders, environments }) {
       <div style={{ width: '100%', maxWidth: 960, height: 'clamp(320px, 60vh, 720px)', margin: '0 auto' }}>
         <Radar data={data} options={options} />
       </div>
-    </div>
+    </section>
   )
 }

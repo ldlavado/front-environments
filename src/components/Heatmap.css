@@ -1,0 +1,28 @@
+.heatmap-card {
+  /* Component-specific tweaks; base card styles come from the global .card class */
+  overflow-x: auto; /* allow horizontal scroll if many environment columns */
+}
+
+.heatmap-title {
+  margin: 12px 0 8px;
+}
+
+.heatmap-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.heatmap-table th,
+.heatmap-table td {
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+}
+
+.heatmap-table th {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}

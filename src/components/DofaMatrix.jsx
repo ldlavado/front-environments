@@ -91,14 +91,6 @@ export default function DofaMatrix({ data }) {
       gridTemplateRows: 'auto auto',
       gap: 12,
     },
-    card: {
-      background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '#0b1220',
-      color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg') || '#e5e7eb',
-      border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#253050'}`,
-      borderRadius: 10,
-      padding: 12,
-      boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
-    },
     title: { fontWeight: 700, marginBottom: 8 },
     subtitle: { opacity: 0.8, marginBottom: 12 },
     list: { margin: 0, paddingLeft: 18 },
@@ -267,7 +259,7 @@ export default function DofaMatrix({ data }) {
         <button onClick={handleResetDefaults} title="Restaurar desde public/dofa.json" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
       <div style={styles.grid}>
-        <section style={styles.card}>
+        <section className="card">
           <div style={styles.title}>Fortalezas</div>
           <ul style={styles.list}>
             {(d.fortalezas || []).map((f) => (
@@ -275,7 +267,7 @@ export default function DofaMatrix({ data }) {
             ))}
           </ul>
         </section>
-        <section style={styles.card}>
+        <section className="card">
           <div style={styles.title}>Oportunidades</div>
           <ul style={styles.list}>
             {(d.oportunidades || []).map((o) => (
@@ -283,7 +275,7 @@ export default function DofaMatrix({ data }) {
             ))}
           </ul>
         </section>
-        <section style={styles.card}>
+        <section className="card">
           <div style={styles.title}>Debilidades</div>
           <ul style={styles.list}>
             {(d.debilidades || []).map((de) => (
@@ -291,7 +283,7 @@ export default function DofaMatrix({ data }) {
             ))}
           </ul>
         </section>
-        <section style={styles.card}>
+        <section className="card">
           <div style={styles.title}>Amenazas</div>
           <ul style={styles.list}>
             {(d.amenazas || []).map((a) => (
@@ -305,7 +297,7 @@ export default function DofaMatrix({ data }) {
       <div style={{ marginTop: 16 }}>
         <h3 style={{ margin: '12px 0 8px' }}>Estrategias</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <section style={styles.card}>
+          <section className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={styles.title}>FO (Fortalezas x Oportunidades)</div>
               <button onClick={() => setShowFO(v => !v)} style={{ border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' }}>{showFO ? 'Ocultar' : 'Ver'}</button>
@@ -318,7 +310,7 @@ export default function DofaMatrix({ data }) {
               </ul>
             )}
           </section>
-          <section style={styles.card}>
+          <section className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={styles.title}>FA (Fortalezas x Amenazas)</div>
               <button onClick={() => setShowFA(v => !v)} style={{ border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' }}>{showFA ? 'Ocultar' : 'Ver'}</button>
@@ -331,7 +323,7 @@ export default function DofaMatrix({ data }) {
               </ul>
             )}
           </section>
-          <section style={styles.card}>
+          <section className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={styles.title}>DO (Debilidades x Oportunidades)</div>
               <button onClick={() => setShowDO(v => !v)} style={{ border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' }}>{showDO ? 'Ocultar' : 'Ver'}</button>
@@ -344,7 +336,7 @@ export default function DofaMatrix({ data }) {
               </ul>
             )}
           </section>
-          <section style={styles.card}>
+          <section className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={styles.title}>DA (Debilidades x Amenazas)</div>
               <button onClick={() => setShowDA(v => !v)} style={{ border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' }}>{showDA ? 'Ocultar' : 'Ver'}</button>

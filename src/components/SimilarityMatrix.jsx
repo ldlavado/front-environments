@@ -15,9 +15,9 @@ export default function SimilarityMatrix({ stakeholders, environments }) {
   }, [stakeholders, environments])
 
   return (
-    <div style={{ padding: 12 }}>
+    <section className="card" style={{ padding: 12 }}>
       <h2>Similitud entre stakeholders (cosine)</h2>
-      <table style={{ borderCollapse: 'collapse' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
           <tr><th></th>{names.map((n) => <th key={n} style={{ padding: 6 }}>{n}</th>)}</tr>
         </thead>
@@ -32,6 +32,6 @@ export default function SimilarityMatrix({ stakeholders, environments }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   )
 }

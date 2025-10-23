@@ -7,7 +7,7 @@ const cardStyle = {
 
 function Section({ title, children, extra }) {
   return (
-    <div style={{ ...cardStyle, border: '1px solid var(--border, #333)', borderRadius: 8, padding: 16 }}>
+    <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         {extra}

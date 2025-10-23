@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import './Heatmap.css'
 
 function colorFor(value, max) {
   if (max <= 0) return '#fff'
@@ -24,28 +25,28 @@ export default function Heatmap({ stakeholders, environments }) {
   }, [stakeholders, environments])
 
   return (
-    <div style={{ padding: 12 }}>
-      <h2>Heatmap (Stakeholder × Entorno)</h2>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+    <section className="card heatmap-card">
+      <h2 className="heatmap-title">Heatmap (Stakeholder × Entorno)</h2>
+      <table className="heatmap-table">
         <thead>
           <tr>
-            <th style={{ textAlign: 'left', padding: 6 }}>Stakeholder</th>
+            <th>Stakeholder</th>
             {environments.map((e) => (
-              <th key={e} style={{ padding: 6, textAlign: 'center' }}>{String(e).charAt(0).toUpperCase() + String(e).slice(1)}</th>
+              <th key={e} className="center">{String(e).charAt(0).toUpperCase() + String(e).slice(1)}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.stakeholder}>
-              <td style={{ padding: 6 }}>{r.stakeholder}</td>
+              <td>{r.stakeholder}</td>
               {r.cells.map((c, i) => (
-                <td key={i} style={{ padding: 6, textAlign: 'center', background: colorFor(c, max) }}>{c}</td>
+                <td key={i} className="center" style={{ background: colorFor(c, max) }}>{c}</td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   )
 }

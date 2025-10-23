@@ -61,14 +61,6 @@ export default function MefeMatrix({ data }) {
   }, [d])
 
   const styles = {
-    tableWrap: {
-      background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '#0b1220',
-      color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg') || '#e5e7eb',
-      border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#253050'}`,
-      borderRadius: 10,
-      padding: 12,
-      boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
-    },
     table: {
       width: '100%',
       borderCollapse: 'collapse',
@@ -177,7 +169,7 @@ export default function MefeMatrix({ data }) {
         <button onClick={handleResetDefaults} title="Restaurar desde public/mefe.json" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
 
-      <div style={styles.tableWrap}>
+      <div className="card">
         <table style={styles.table}>
           <thead>
             <tr>

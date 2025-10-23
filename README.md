@@ -1,42 +1,132 @@
-# React + Vite
+# MGIP Environments (front-end)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web interactiva para analizar variables por entornos y stakeholders. Ofrece gráficos, matrices de análisis (DOFA, MEFI, MEFE, MAFE, MPC, MML), comparativas y herramientas para editar/importar datos.
 
-Currently, two official plugins are available:
+La app usa React + Vite, Chart.js y un tema visual claro único basado en variables CSS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Vista general
 
-## React Compiler
+Estructura principal del código en `src/`:
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- `App.jsx`: orquesta la navegación por pestañas y carga de datos.
+- `data.js`: datos por defecto y función `loadDefaultData()` que intenta cargar `public/default-data.json` con fallback local.
+- `index.css`: tokens de estilo (CSS variables) y estilos globales. Tema fijo en claro.
+- `components/`: componentes de visualización y análisis (ver lista abajo).
 
-Note: This will impact Vite dev & build performances.
+Fuentes de datos en `public/`:
 
-## Expanding the ESLint configuration
+- `default-data.json`: archivo que la app intenta cargar al iniciar.
+- Otros JSON de ejemplo: `dofa.json`, `mafe.json`, `mefi.json`, `mefe.json`, `mml.json`, `mpc.json`.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Componentes principales
 
-## Instrucciones rápidas (ES)
+- `Navbar.jsx`: barra fija con grupos de navegación y acción para “Restaurar datos por defecto”.
+- `Charts.jsx`: gráficos base de distribución por entornos/stakeholders.
+- `EnvironmentImpact.jsx`: impacto por entorno para stakeholders seleccionados.
+- `StackedEnvironments.jsx`: comparación apilada entre entornos.
+- `Heatmap.jsx`: mapa de calor de variables vs entornos.
+- `RadarProfile.jsx`: perfiles tipo radar.
+- `SimilarityMatrix.jsx`: matriz de similitud entre entornos o stakeholders.
+- `SankeySimple.jsx`: flujo Sankey a partir de texto/relaciones.
+- Matrices de análisis:
+  - `DofaMatrix.jsx` (DOFA)
+  - `MefiMatrix.jsx` (MEFI)
+  - `MefeMatrix.jsx` (MEFE)
+  - `MafeMatrix.jsx` (MAFE)
+  - `MpcMatrix.jsx` (MPC)
+  - `MmlMatrix.jsx` (MML)
+- `StakeholderEditor.jsx`: editor de stakeholders y variables (con persistencia local).
+- `ExcelView.jsx`: vista estilo “Excel” para editar/importar datos rápidamente.
+- `EnvironmentResilience.jsx`: visualización de resiliencia por entorno.
 
-Se creó un proyecto React + Vite. Recomendado usar Node.js LTS (por ejemplo 18.x/20.x según tu entorno).
+Cada vista se selecciona desde la barra superior. La URL usa `hash` (por ejemplo `#heatmap`) para permitir navegación directa.
 
-Comandos útiles:
+## Datos y formato
 
-- Instalar dependencias:
+- Los datos por defecto están embebidos en `src/data.js` y se intentan sobrescribir con `public/default-data.json` si existe y es válido.
+- Estructura esperada mínima:
 
-  npm install
+```json
+{
+  "stakeholders": [
+    {
+      "stakeholder": "MinTIC",
+      "total_pct": 10,
+      "variables": {
+        "Nombre variable": {
+          "total_pct": 22,
+          "impacto_pct": { "politico": 6, "económico": 4, "técnico": 8, "social": 1, "ambiental": 0, "legal": 3 }
+        }
+      }
+    }
+  ],
+  "environments": ["politico", "económico", "técnico", "social", "ambiental", "legal"]
+}
+```
 
-- Ejecutar en desarrollo:
+Si el `fetch` falla o el archivo no cumple el formato, se usa el fallback embebido.
 
-  npm run dev
+## Requisitos técnicos
 
-- Construir para producción:
+- Node.js 18+ (recomendado 18 LTS o 20).
+- npm 9+.
+- Navegador moderno (Chrome, Edge, Firefox) con soporte ES2020+.
 
-  npm run build
+Dependencias clave:
 
-- Previsualizar el build:
+- React 19
+- Vite 7
+- Chart.js 4 y `chartjs-plugin-datalabels`
 
-  npm run preview
+## Scripts disponibles
 
-Si necesitas gestionar versiones de Node, considera usar `nvm` (https://github.com/nvm-sh/nvm).
+Todos se ejecutan desde la raíz del proyecto.
+
+- Desarrollo (HMR):
+
+```bash
+npm run dev
+```
+
+- Construcción de producción:
+
+```bash
+npm run build
+```
+
+- Previsualización del build:
+
+```bash
+npm run preview
+```
+
+- Linter (ESLint):
+
+```bash
+npm run lint
+```
+
+## Tema visual
+
+- La aplicación usa un único tema claro. Las variables CSS viven en `:root` dentro de `src/index.css` y no hay alternancia de tema.
+- Esto evita conflictos entre temas y simplifica el renderizado de gráficos.
+
+## Despliegue
+
+- El proyecto incluye `render.yaml` para despliegue en Render.com. Flujo típico:
+  1) Crear servicio estático en Render apuntando a este repo.
+  2) Comando de build: `npm run build`.
+  3) Directorio de publicación: `dist/`.
+- Para otros proveedores (Netlify, Vercel, GitHub Pages), basta con publicar el contenido de `dist/` tras ejecutar el build.
+
+## Notas y buenas prácticas
+
+- Mantén coherencia con el formato de `default-data.json` si lo personalizas.
+- Para cambios grandes en datos, verifica en varias vistas (Heatmap, Radar, Matrices) que los valores no rompan escalas.
+- Si agregas componentes nuevos, reutiliza tokens de color de `index.css`.
+
+## Desarrollo futuro (ideas)
+
+- Exportar/Importar a CSV y XLSX desde `ExcelView`.
+- Filtros avanzados por stakeholder/entorno.
+- Parámetros en URL para estados (selecciones) compartibles.

@@ -1,40 +1,5 @@
 :root {
-  /* base */
-  --bg: #242424;
-  --fg: rgba(255, 255, 255, 0.9);
-  --btn-bg: #1a1a1a;
-  --btn-fg: var(--fg);
-  --link: #8aa2ff;
-  --link-hover: #a0afff;
-  --card-bg: #0f172a;
-  --card-fg: #e2e8f0;
-  --surface: #151a2b;
-  --surface-fg: var(--fg);
-  --border: #2a2f45;
-  --muted: rgba(255, 255, 255, 0.7);
-  --muted-2: rgba(255, 255, 255, 0.55);
-  --highlight-bg: #2a2f45;
-
-  /* charts */
-  --chart-grid: #3a3f59;
-  --chart-tick: rgba(255, 255, 255, 0.8);
-  --chart-legend: rgba(255, 255, 255, 0.9);
-  --chart-label: rgba(0, 0, 0, 0.9); /* labels inside slices, prefer dark-on-light sector colors */
-  --chart-slice-border: rgba(0, 0, 0, 0.5);
-
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light dark;
-  color: var(--fg);
-  background-color: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-:root[data-theme='light'] {
+  /* Variables del tema claro (único) */
   --bg: #ffffff;
   --fg: #0f172a;
   --btn-bg: #f8fafc;
@@ -50,34 +15,24 @@
   --muted-2: #64748b;
   --highlight-bg: #e5e7eb;
 
+  /* charts */
   --chart-grid: #e5e7eb;
   --chart-tick: #111827;
   --chart-legend: #111827;
   --chart-label: #111827;
   --chart-slice-border: rgba(255, 255, 255, 0.9);
-}
 
-:root[data-theme='dark'] {
-  --bg: #0b1020;
-  --fg: rgba(255,255,255,0.92);
-  --btn-bg: #141a2f;
-  --btn-fg: rgba(255,255,255,0.92);
-  --link: #8aa2ff;
-  --link-hover: #a0afff;
-  --card-bg: #0f172a;
-  --card-fg: #e2e8f0;
-  --surface: #121935;
-  --surface-fg: rgba(255,255,255,0.92);
-  --border: #2a2f45;
-  --muted: rgba(255,255,255,0.75);
-  --muted-2: rgba(255,255,255,0.6);
-  --highlight-bg: #1e2642;
-
-  --chart-grid: #2a2f45;
-  --chart-tick: rgba(255,255,255,0.9);
-  --chart-legend: rgba(255,255,255,0.92);
-  --chart-label: rgba(0,0,0,0.9);
-  --chart-slice-border: rgba(0, 0, 0, 0.5);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  /* Solo tema claro para evitar conflictos */
+  color-scheme: light;
+  color: var(--fg);
+  background-color: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -123,7 +78,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* The media query remains a fallback; explicit data-theme overrides above take precedence */
+/* Tema único claro; no hay overrides por data-theme */
 
 /* form controls */
 input, select, textarea {
@@ -144,4 +99,14 @@ table {
 }
 th, td {
   color: inherit;
+}
+
+/* Reusable card container, aligned with app theme tokens */
+.card {
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
