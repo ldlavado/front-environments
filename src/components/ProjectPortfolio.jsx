@@ -49,9 +49,20 @@ const getLocalJson = (key) => {
   return null
 }
 
+const BASE_URL = (import.meta?.env?.BASE_URL) || '/'
+
+const resolveAssetPath = (path) => {
+  if (!path) return path
+  if (/^https?:/i.test(path)) return path
+  if (BASE_URL === '/' || BASE_URL === '') return path
+  const clean = path.replace(/^\//, '')
+  return `${BASE_URL}${clean}`
+}
+
 const fetchMatrix = async (path) => {
   try {
-    const res = await fetch(path, { cache: 'no-store' })
+    const target = resolveAssetPath(path)
+    const res = await fetch(target, { cache: 'no-store' })
     if (!res.ok) throw new Error('HTTP ' + res.status)
     return await res.json()
   } catch {
