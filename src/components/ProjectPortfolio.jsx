@@ -78,6 +78,36 @@ const cleanLabel = (txt = '') => txt.replace(/["“”]/g, '').split(/[\.,;]/)[0
 
 const formatScore = (num) => (Number.isFinite(num) ? Number(num).toFixed(2) : '0.00')
 
+const computeCriteriaScore = (criteria) => {
+  if (!criteria) return null
+  let values = []
+  if (Array.isArray(criteria)) {
+    values = criteria.map((entry) => {
+      if (entry && typeof entry === 'object') return entry.valor ?? entry.value ?? entry.puntaje ?? entry.score
+      return entry
+    })
+  } else if (typeof criteria === 'object') {
+    values = Object.values(criteria)
+  }
+  const nums = values
+    .map((val) => {
+      if (typeof val === 'number') return val
+      if (typeof val === 'string') {
+        const parsed = Number(val.replace(/[^0-9.-]/g, ''))
+        return Number.isFinite(parsed) ? parsed : null
+      }
+      return null
+    })
+    .filter((val) => val != null)
+  if (!nums.length) return null
+  const avg = nums.reduce((acc, val) => acc + val, 0) / nums.length
+  const maxScale = 5
+  const minScale = 0
+  const clamped = Math.max(minScale, Math.min(maxScale, avg))
+  const normalized = maxScale === minScale ? 0 : (clamped - minScale) / (maxScale - minScale)
+  return Number(normalized.toFixed(3))
+}
+
 export default function ProjectPortfolio() {
   const [dofa, setDofa] = useState(() => getLocalJson('dofa_data'))
   const [mefi, setMefi] = useState(() => getLocalJson('mefi_data'))
@@ -154,6 +184,8 @@ export default function ProjectPortfolio() {
         const scoreInternal = internalIds.reduce((acc, id) => acc + getMefiScore(id), 0)
         const scoreExternal = externalIds.reduce((acc, id) => acc + getMefeScore(id), 0)
         const totalScore = Number((scoreInternal + scoreExternal).toFixed(2))
+        const mafeCriteria = estr.criterios || estr.criteria || null
+        const criteriaScore = computeCriteriaScore(mafeCriteria)
         const base = {
           type,
           internalIds,
@@ -161,7 +193,8 @@ export default function ProjectPortfolio() {
           score: totalScore,
           mafeId: estr.id,
           mafeEnunciado: estr.enunciado,
-          mafeCriteria: estr.criterios || estr.criteria || null,
+           mafeCriteria,
+          criteriaScore,
           seedId: `${type}-${estr.id || idx}`,
         }
         if (Array.isArray(estr.proyectos) && estr.proyectos.length) {
@@ -218,16 +251,23 @@ export default function ProjectPortfolio() {
   }, [mafeStrategies, autoStrategies])
 
   const strategySetsBiased = useMemo(() => {
-    const biasFactor = (hasMafe) => {
-      if (hasMafe) return 1 + mafeBias
-      return Math.max(0.1, 1 - mafeBias)
+    const getWeightedScore = (item) => {
+      const baseScore = Number(item.score) || 0
+      const criteriaScore = typeof item.criteriaScore === 'number' ? item.criteriaScore : null
+      if (criteriaScore != null && mafeBias > 0) {
+        const criteriaComponent = baseScore * criteriaScore
+        return Number(((baseScore * (1 - mafeBias)) + (criteriaComponent * mafeBias)).toFixed(2))
+      }
+      if (item.mafeId) {
+        return Number((baseScore * (1 + mafeBias)).toFixed(2))
+      }
+      return Number((baseScore * Math.max(0.1, 1 - mafeBias)).toFixed(2))
     }
     return Object.entries(strategySets).reduce((acc, [type, arr]) => {
-      acc[type] = arr.map((item) => {
-        const baseScore = Number(item.score) || 0
-        const weightedScore = Number((baseScore * biasFactor(Boolean(item.mafeId))).toFixed(2))
-        return { ...item, score: baseScore, weightedScore }
-      })
+      acc[type] = arr.map((item) => ({
+        ...item,
+        weightedScore: getWeightedScore(item),
+      }))
       return acc
     }, {})
   }, [strategySets, mafeBias])
