@@ -349,13 +349,20 @@ export default function ProjectPortfolio() {
     const projectName = overrideProject?.nombre || (mafeId ? `${mafeId} · ${cleanLabel(labelSource)}` : `${meta.verb} ${cleanLabel(labelSource)}`)
     const description = overrideProject?.descripcion || mafeEnunciado || `Proyecto orientado a ${strategy.type === 'DO' || strategy.type === 'DA' ? 'cerrar brechas internas' : 'aprovechar capacidades existentes'} alineado con la estrategia ${type}.`
     const effects = []
+    const effectLinks = []
     internalIds.forEach((id) => {
       const factor = mefiMap.get(id)
       if (factor) effects.push(`MEFI ${id}: ${factor.nombre || factor.descripcion || 'factor interno'} (peso ${formatScore(factor.peso)} → +calificación)`)
     })
+    internalIds.forEach((id) => {
+      effectLinks.push({ label: `MEFI ${id}`, matrix: 'mefi', id })
+      effectLinks.push({ label: `DOFA ${id}`, matrix: 'dofa', id })
+    })
     externalIds.forEach((id) => {
       const factor = mefeMap.get(id)
       if (factor) effects.push(`MEFE ${id}: ${factor.nombre || factor.descripcion || 'factor externo'} (peso ${formatScore(factor.peso)} → mejor respuesta)`)
+      effectLinks.push({ label: `MEFE ${id}`, matrix: 'mefe', id })
+      effectLinks.push({ label: `DOFA ${id}`, matrix: 'dofa', id })
     })
     if (!effects.length && labelSource) effects.push(`Refuerza ${labelSource}`)
     const kpis = Array.isArray(overrideProject?.kpis) && overrideProject.kpis.length
@@ -402,6 +409,7 @@ export default function ProjectPortfolio() {
       sourceExternalIds: externalIds,
       mafeId,
       mafeCriteria: criteriaList,
+      effectLinks,
     }
   }
 
@@ -862,6 +870,27 @@ export default function ProjectPortfolio() {
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6 }}>
                   <strong>Efecto en matrices:</strong> {project.effects.join(' | ')}
+                  {project.effectLinks && project.effectLinks.length > 0 && (
+                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {project.effectLinks.map((link, idx) => (
+                        <button
+                          key={`${project.id}-effect-${idx}`}
+                          onClick={() => focusMatrix(link.matrix, link.id)}
+                          style={{
+                            border: '1px solid rgba(148,163,184,0.5)',
+                            borderRadius: 6,
+                            padding: '2px 6px',
+                            background: 'transparent',
+                            color: 'inherit',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                          }}
+                        >
+                          {link.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6 }}>
                   <strong>KPIs sugeridos:</strong> {project.kpis.join(' · ')}
