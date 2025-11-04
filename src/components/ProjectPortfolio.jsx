@@ -1,0 +1,821 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+
+const PROGRAM_RULES = [
+  { id: 'digital', label: 'Transformación digital & datos', keywords: ['dato', 'data', 'cloud', 'iot', 'interoperabilidad', 'analítica', 'sensores', 'automat', 'devops', 'ia'] },
+  { id: 'cambio', label: 'Gestión del cambio y cultura', keywords: ['cambio', 'cultura', 'talento', 'person', 'capacita', 'adopción', 'formación', 'usuarios'] },
+  { id: 'sostenibilidad', label: 'Eficiencia energética y sostenibilidad', keywords: ['energ', 'carbon', 'huella', 'ambient', 'sosten', 'circular', 'raee'] },
+  { id: 'cumplimiento', label: 'Cumplimiento, riesgo y seguridad', keywords: ['segur', 'cumpl', 'normativ', 'legal', 'riesgo', 'privacidad', 'hse', 'continuidad'] },
+  { id: 'operaciones', label: 'Excelencia operativa y O&M', keywords: ['operación', 'operativo', 'mantenimiento', 'o&m', 'sla', 'soporte', 'integración', 'bms', 'erp'] },
+  { id: 'innovacion', label: 'Innovación y alianzas', keywords: [] },
+]
+
+const PROGRAM_SUGGESTIONS = {
+  digital: ['Disponibilidad de datos interoperables', 'Latencia de analítica en minutos', 'Cobertura IoT integrada'],
+  cambio: ['Nivel de adopción usuario final', 'Horas de capacitación completadas', 'Índice de satisfacción del cambio'],
+  sostenibilidad: ['kWh ahorrados / m²', 'Ton CO₂ evitadas', 'Equipos tratados bajo RAEE'],
+  cumplimiento: ['Cierres de auditoría sin hallazgos', 'Incidentes de seguridad reportados', 'Actualizaciones normativas atendidas'],
+  operaciones: ['MTBF / MTTR digital', 'Disponibilidad de sistemas críticos', 'Tiempo de integración con ERP/BMS'],
+  innovacion: ['Pilotos escalados', 'Fondos externos captados', 'Nuevas alianzas activas'],
+}
+
+const TYPE_META = {
+  FO: { verb: 'Escalar', effort: 'Media', horizon: '0-6 meses' },
+  FA: { verb: 'Blindar', effort: 'Media', horizon: '6-9 meses' },
+  DO: { verb: 'Transformar', effort: 'Alta', horizon: '9-12 meses' },
+  DA: { verb: 'Mitigar', effort: 'Alta', horizon: '12-18 meses' },
+}
+
+const PRIORITY_LEVELS = [
+  { label: 'Alta', threshold: 0.66 },
+  { label: 'Media', threshold: 0.33 },
+  { label: 'Baja', threshold: 0 },
+]
+
+const IMPACT_LEVELS = [
+  { label: 'Muy alto', threshold: 0.75 },
+  { label: 'Alto', threshold: 0.5 },
+  { label: 'Medio', threshold: 0.3 },
+  { label: 'Controlado', threshold: 0 },
+]
+
+const getLocalJson = (key) => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw) return JSON.parse(raw)
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
+const fetchMatrix = async (path) => {
+  try {
+    const res = await fetch(path, { cache: 'no-store' })
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+const assignProgram = (text) => {
+  const base = (text || '').toLowerCase()
+  const rule = PROGRAM_RULES.find((r) => r.keywords.some((kw) => base.includes(kw)))
+  return rule || PROGRAM_RULES.find((r) => r.id === 'innovacion')
+}
+
+const normalizeProgram = (codeOrRule) => {
+  if (!codeOrRule) return null
+  if (typeof codeOrRule === 'string') {
+    return PROGRAM_RULES.find((r) => r.id === codeOrRule) || { id: codeOrRule, label: codeOrRule }
+  }
+  if (codeOrRule && typeof codeOrRule === 'object' && codeOrRule.id) return codeOrRule
+  return null
+}
+
+const cleanLabel = (txt = '') => txt.replace(/["“”]/g, '').split(/[\.,;]/)[0].trim()
+
+const formatScore = (num) => (Number.isFinite(num) ? Number(num).toFixed(2) : '0.00')
+
+export default function ProjectPortfolio() {
+  const [dofa, setDofa] = useState(() => getLocalJson('dofa_data'))
+  const [mefi, setMefi] = useState(() => getLocalJson('mefi_data'))
+  const [mefe, setMefe] = useState(() => getLocalJson('mefe_data'))
+  const [mafe, setMafe] = useState(() => getLocalJson('mafe_data'))
+  const [loading, setLoading] = useState(false)
+  const [typeFilter, setTypeFilter] = useState('ALL')
+  const [programFilter, setProgramFilter] = useState('ALL')
+  const [maxPerType, setMaxPerType] = useState(5)
+  const [miniTab, setMiniTab] = useState('impact')
+  const [panelOpen, setPanelOpen] = useState(true)
+  const [activeProjectId, setActiveProjectId] = useState(null)
+  const [quickAnswer, setQuickAnswer] = useState(null)
+  const [mafeBias, setMafeBias] = useState(0.3)
+  const projectRefs = useRef({})
+
+  useEffect(() => {
+    let cancel = false
+    if (!dofa) {
+      setLoading(true)
+      fetchMatrix('/dofa.json').then((json) => {
+        if (!cancel && json) setDofa(json)
+        setLoading(false)
+      })
+    }
+    if (!mefi) fetchMatrix('/mefi.json').then((json) => { if (!cancel && json) setMefi(json) })
+    if (!mefe) fetchMatrix('/mefe.json').then((json) => { if (!cancel && json) setMefe(json) })
+    if (!mafe) fetchMatrix('/mafe.json').then((json) => { if (!cancel && json) setMafe(json) })
+    return () => { cancel = true }
+  }, [dofa, mefi, mefe, mafe])
+
+  const mefiMap = useMemo(() => {
+    const entries = Array.isArray(mefi?.factores) ? mefi.factores : []
+    return entries.reduce((acc, item) => acc.set(item.id, item), new Map())
+  }, [mefi])
+
+  const mefeMap = useMemo(() => {
+    const entries = Array.isArray(mefe?.factores) ? mefe.factores : []
+    return entries.reduce((acc, item) => acc.set(item.id, item), new Map())
+  }, [mefe])
+
+  const getMefiScore = (id) => {
+    const factor = mefiMap.get(id)
+    if (!factor) return 0
+    return (Number(factor.peso) || 0) * (Number(factor.calificacion) || 0)
+  }
+
+  const getMefeScore = (id) => {
+    const factor = mefeMap.get(id)
+    if (!factor) return 0
+    return (Number(factor.peso) || 0) * (Number(factor.calificacion) || 0)
+  }
+
+  const dofaIndex = useMemo(() => {
+    const mapFrom = (arr) => new Map((Array.isArray(arr) ? arr : []).map((item) => [item.id, item]))
+    return {
+      F: mapFrom(dofa?.fortalezas),
+      D: mapFrom(dofa?.debilidades),
+      O: mapFrom(dofa?.oportunidades),
+      A: mapFrom(dofa?.amenazas),
+    }
+  }, [dofa])
+
+  const mafeStrategies = useMemo(() => {
+    if (!mafe?.estrategias) return null
+    const types = ['FO', 'FA', 'DO', 'DA']
+    const build = (type) => {
+      const list = Array.isArray(mafe.estrategias?.[type]) ? mafe.estrategias[type] : []
+      const internalKind = type === 'FO' || type === 'FA' ? 'F' : 'D'
+      const externalKind = type === 'FO' || type === 'DO' ? 'O' : 'A'
+      return list.flatMap((estr, idx) => {
+        const internalIds = Array.isArray(estr.cruce?.[internalKind]) ? estr.cruce[internalKind] : []
+        const externalIds = Array.isArray(estr.cruce?.[externalKind]) ? estr.cruce[externalKind] : []
+        const scoreInternal = internalIds.reduce((acc, id) => acc + getMefiScore(id), 0)
+        const scoreExternal = externalIds.reduce((acc, id) => acc + getMefeScore(id), 0)
+        const totalScore = Number((scoreInternal + scoreExternal).toFixed(2))
+        const base = {
+          type,
+          internalIds,
+          externalIds,
+          score: totalScore,
+          mafeId: estr.id,
+          mafeEnunciado: estr.enunciado,
+          mafeCriteria: estr.criterios || estr.criteria || null,
+          seedId: `${type}-${estr.id || idx}`,
+        }
+        if (Array.isArray(estr.proyectos) && estr.proyectos.length) {
+          return estr.proyectos.map((proj, projIdx) => ({
+            ...base,
+            overrideProject: proj,
+            projectKey: proj.id || `${base.seedId}-P${projIdx + 1}`,
+          }))
+        }
+        return [base]
+      })
+    }
+    return types.reduce((acc, type) => {
+      acc[type] = build(type)
+      return acc
+    }, {})
+  }, [mafe, mefiMap, mefeMap])
+
+  const autoStrategies = useMemo(() => {
+    const F = Array.isArray(dofa?.fortalezas) ? dofa.fortalezas : []
+    const O = Array.isArray(dofa?.oportunidades) ? dofa.oportunidades : []
+    const D = Array.isArray(dofa?.debilidades) ? dofa.debilidades : []
+    const A = Array.isArray(dofa?.amenazas) ? dofa.amenazas : []
+    const build = (left, right, type) => left.flatMap((l) => right.map((r) => ({
+      type,
+      internalIds: [l.id],
+      externalIds: [r.id],
+      score: Number((getMefiScore(l.id) + getMefeScore(r.id)).toFixed(2)),
+      generatedText: type === 'FO'
+        ? `Usar ${l.texto} para escalar ${r.texto}`
+        : type === 'FA'
+          ? `Usar ${l.texto} para mitigar ${r.texto}`
+          : type === 'DO'
+            ? `Corregir ${l.texto} aprovechando ${r.texto}`
+            : `Blindar ${l.texto} ante ${r.texto}`,
+      seedId: `${type}-${l.id}-${r.id}`,
+    })))
+    return {
+      FO: build(F, O, 'FO'),
+      FA: build(F, A, 'FA'),
+      DO: build(D, O, 'DO'),
+      DA: build(D, A, 'DA'),
+    }
+  }, [dofa, mefiMap, mefeMap])
+
+  const strategySets = useMemo(() => {
+    const types = ['FO', 'FA', 'DO', 'DA']
+    const result = {}
+    types.forEach((type) => {
+      const mafeList = mafeStrategies?.[type] || []
+      result[type] = mafeList.length ? mafeList : autoStrategies[type] || []
+    })
+    return result
+  }, [mafeStrategies, autoStrategies])
+
+  const strategySetsBiased = useMemo(() => {
+    const biasFactor = (hasMafe) => {
+      if (hasMafe) return 1 + mafeBias
+      return Math.max(0.1, 1 - mafeBias)
+    }
+    return Object.entries(strategySets).reduce((acc, [type, arr]) => {
+      acc[type] = arr.map((item) => {
+        const baseScore = Number(item.score) || 0
+        const weightedScore = Number((baseScore * biasFactor(Boolean(item.mafeId))).toFixed(2))
+        return { ...item, score: baseScore, weightedScore }
+      })
+      return acc
+    }, {})
+  }, [strategySets, mafeBias])
+
+  const allStrategies = useMemo(() => {
+    return Object.entries(strategySetsBiased).flatMap(([type, arr]) => arr.map((it, idx) => ({ ...it, key: `${type}-${idx}` })))
+  }, [strategySetsBiased])
+
+  const scoreStats = useMemo(() => {
+    if (!allStrategies.length) return { min: 0, max: 1 }
+    const scores = allStrategies.map((s) => Number(s.weightedScore ?? s.score) || 0)
+    return { min: Math.min(...scores), max: Math.max(...scores) }
+  }, [allStrategies])
+
+  const getNormalized = (score) => {
+    const { min, max } = scoreStats
+    if (max === min) return 0.5
+    return (score - min) / (max - min || 1)
+  }
+
+  const prioritizedStrategies = useMemo(() => {
+    return Object.entries(strategySetsBiased).flatMap(([type, arr]) => {
+      const ordered = [...arr].sort((a, b) => (b.weightedScore || 0) - (a.weightedScore || 0))
+      return ordered.slice(0, maxPerType).map((item, idx) => ({ ...item, key: `${type}-${idx}` }))
+    }).sort((a, b) => (b.weightedScore || b.score || 0) - (a.weightedScore || a.score || 0))
+  }, [strategySetsBiased, maxPerType])
+
+  const buildProject = (strategy, index) => {
+    const { type, internalIds = [], externalIds = [], score, weightedScore, mafeId, mafeEnunciado, generatedText, mafeCriteria, overrideProject, projectKey, seedId } = strategy
+    const baseScore = Number(score) || 0
+    const effectiveScore = Number(weightedScore ?? baseScore) || 0
+    const normalized = getNormalized(effectiveScore)
+    const priority = PRIORITY_LEVELS.find((lvl) => normalized >= lvl.threshold)?.label || 'Media'
+    const impactLabel = IMPACT_LEVELS.find((lvl) => normalized >= lvl.threshold)?.label || 'Medio'
+    const meta = TYPE_META[type] || { verb: 'Activar', effort: 'Media', horizon: '12 meses' }
+    const internalKind = type === 'FO' || type === 'FA' ? 'F' : 'D'
+    const externalKind = type === 'FO' || type === 'DO' ? 'O' : 'A'
+    const internalNodes = internalIds.map((id) => dofaIndex[internalKind]?.get(id)).filter(Boolean)
+    const externalNodes = externalIds.map((id) => dofaIndex[externalKind]?.get(id)).filter(Boolean)
+    const labelSource = overrideProject?.nombre || mafeEnunciado || generatedText || externalNodes[0]?.texto || internalNodes[0]?.texto || 'estrategia'
+    const baseProgramsText = `${internalNodes.map((n) => n?.texto).join(' ')} ${externalNodes.map((n) => n?.texto).join(' ')}`
+    let programs = []
+    if (Array.isArray(overrideProject?.programas) && overrideProject.programas.length) {
+      programs = overrideProject.programas.map((code) => normalizeProgram(code)).filter(Boolean)
+    }
+    if (!programs.length) {
+      const autoProgram = normalizeProgram(assignProgram(baseProgramsText))
+      if (autoProgram) programs.push(autoProgram)
+    }
+    if (!programs.length) programs.push({ id: 'otros', label: 'Otros programas' })
+    const primaryProgram = programs[0]
+    const projectName = overrideProject?.nombre || (mafeId ? `${mafeId} · ${cleanLabel(labelSource)}` : `${meta.verb} ${cleanLabel(labelSource)}`)
+    const description = overrideProject?.descripcion || mafeEnunciado || `Proyecto orientado a ${strategy.type === 'DO' || strategy.type === 'DA' ? 'cerrar brechas internas' : 'aprovechar capacidades existentes'} alineado con la estrategia ${type}.`
+    const effects = []
+    internalIds.forEach((id) => {
+      const factor = mefiMap.get(id)
+      if (factor) effects.push(`MEFI ${id}: ${factor.nombre || factor.descripcion || 'factor interno'} (peso ${formatScore(factor.peso)} → +calificación)`)
+    })
+    externalIds.forEach((id) => {
+      const factor = mefeMap.get(id)
+      if (factor) effects.push(`MEFE ${id}: ${factor.nombre || factor.descripcion || 'factor externo'} (peso ${formatScore(factor.peso)} → mejor respuesta)`)
+    })
+    if (!effects.length && labelSource) effects.push(`Refuerza ${labelSource}`)
+    const kpis = Array.isArray(overrideProject?.kpis) && overrideProject.kpis.length
+      ? overrideProject.kpis
+      : (PROGRAM_SUGGESTIONS[primaryProgram.id] || PROGRAM_SUGGESTIONS.innovacion)
+    const strategyText = `${mafeId ? `${mafeId}: ` : ''}${mafeEnunciado || generatedText || internalNodes.map((n) => n?.texto).join(' + ')}`
+    const criteriaList = (() => {
+      if (!mafeCriteria) return []
+      if (Array.isArray(mafeCriteria)) {
+        return mafeCriteria.map((entry, idx) => {
+          if (entry && typeof entry === 'object') {
+            return {
+              nombre: entry.nombre || entry.name || `Criterio ${idx + 1}`,
+              valor: entry.valor ?? entry.value ?? entry.puntaje ?? entry.score ?? '',
+            }
+          }
+          return { nombre: typeof entry === 'string' ? entry : `Criterio ${idx + 1}`, valor: '' }
+        })
+      }
+      if (typeof mafeCriteria === 'object') {
+        return Object.entries(mafeCriteria).map(([nombre, valor]) => ({ nombre, valor }))
+      }
+      return []
+    })()
+    const seed = projectKey || seedId || `${type}-${internalIds[0] || externalIds[0] || index}`
+    const finalId = overrideProject?.id || `PP-${seed}`
+    return {
+      id: finalId,
+      type,
+      priority,
+      impactLabel,
+      effort: overrideProject?.esfuerzo || meta.effort,
+      horizon: overrideProject?.horizonte || meta.horizon,
+      program: primaryProgram,
+      programs,
+      score: formatScore(baseScore),
+      normalized: Number(normalized.toFixed(2)),
+      strategyText,
+      description,
+      projectName,
+      effects,
+      kpis,
+      sourceInternalIds: internalIds,
+      sourceExternalIds: externalIds,
+      mafeId,
+      mafeCriteria: criteriaList,
+    }
+  }
+
+  const projects = useMemo(() => prioritizedStrategies.map((strategy, idx) => buildProject(strategy, idx)), [prioritizedStrategies])
+
+  const programOptions = useMemo(() => {
+    const map = new Map(PROGRAM_RULES.map((p) => [p.id, p]))
+    projects.forEach((project) => {
+      (project.programs || [project.program]).forEach((prog) => {
+        if (!prog) return
+        if (!map.has(prog.id)) {
+          map.set(prog.id, { id: prog.id, label: prog.label || prog.id })
+        }
+      })
+    })
+    return Array.from(map.values())
+  }, [projects])
+
+  useEffect(() => {
+    if (programFilter !== 'ALL' && !programOptions.some((p) => p.id === programFilter)) {
+      setProgramFilter('ALL')
+    }
+  }, [programFilter, programOptions])
+
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const typeOk = typeFilter === 'ALL' || project.type === typeFilter
+      const programOk = programFilter === 'ALL' || (project.programs || []).some((prog) => prog.id === programFilter)
+      return typeOk && programOk
+    })
+  }, [projects, typeFilter, programFilter])
+
+  const summary = useMemo(() => {
+    if (!filteredProjects.length) return { avg: 0, programs: 0 }
+    const avg = filteredProjects.reduce((acc, p) => acc + (p.normalized || 0), 0) / filteredProjects.length
+    const programsSet = new Set()
+    filteredProjects.forEach((p) => {
+      (p.programs || []).forEach((prog) => programsSet.add(prog.id))
+    })
+    return { avg: Number(avg.toFixed(2)), programs: programsSet.size }
+  }, [filteredProjects])
+
+  const exportCSV = () => {
+    const header = ['ID', 'Proyecto', 'Estrategia', 'Tipo', 'Programas', 'Prioridad', 'Impacto', 'Esfuerzo', 'Horizonte', 'Score', 'MAFE', 'KPIs sugeridos', 'Efectos en matrices']
+    const rows = filteredProjects.map((p) => [
+      p.id,
+      p.projectName,
+      p.strategyText,
+      p.type,
+      (p.programs || [p.program]).map((prog) => prog.label).join(' | '),
+      p.priority,
+      p.impactLabel,
+      p.effort,
+      p.horizon,
+      p.score,
+      p.mafeId || '',
+      p.kpis.join(' | '),
+      p.effects.join(' | '),
+    ])
+    const csv = [header, ...rows].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'portafolio_proyectos.csv'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const programBreakdown = useMemo(() => {
+    const map = new Map()
+    filteredProjects.forEach((p) => {
+      (p.programs || [p.program]).forEach((prog) => {
+        if (!prog) return
+        const current = map.get(prog.id) || { ...prog, count: 0, avg: 0 }
+        current.count += 1
+        current.avg += p.normalized || 0
+        map.set(prog.id, current)
+      })
+    })
+    return Array.from(map.values()).map((item) => ({
+      ...item,
+      avg: item.count ? Number((item.avg / item.count).toFixed(2)) : 0,
+    }))
+  }, [filteredProjects])
+
+  const overallProgramBreakdown = useMemo(() => {
+    const map = new Map()
+    projects.forEach((p) => {
+      (p.programs || [p.program]).forEach((prog) => {
+        if (!prog) return
+        const current = map.get(prog.id) || { ...prog, count: 0, avg: 0 }
+        current.count += 1
+        current.avg += p.normalized || 0
+        map.set(prog.id, current)
+      })
+    })
+    return Array.from(map.values()).map((item) => ({
+      ...item,
+      avg: item.count ? Number((item.avg / item.count).toFixed(2)) : 0,
+    }))
+  }, [projects])
+
+  useEffect(() => {
+    if (!filteredProjects.length) {
+      setActiveProjectId(null)
+      return
+    }
+    if (!activeProjectId || !filteredProjects.some((p) => p.id === activeProjectId)) {
+      setActiveProjectId(filteredProjects[0].id)
+    }
+  }, [filteredProjects, activeProjectId])
+
+  useEffect(() => {
+    if (!activeProjectId) return
+    const el = projectRefs.current[activeProjectId]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [activeProjectId])
+
+  const selectedProject = useMemo(() => filteredProjects.find((p) => p.id === activeProjectId) || null, [filteredProjects, activeProjectId])
+
+  const renderBars = (items, color = '#60a5fa') => {
+    if (!items || !items.length) return <div style={{ fontSize: 13, opacity: 0.7 }}>Sin datos suficientes.</div>
+    const max = Math.max(1, ...items.map((item) => Number(item.value) || 0))
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {items.map((item) => {
+          const value = Number(item.value) || 0
+          const pct = Math.min(100, (value / max) * 100)
+          return (
+            <div key={item.label}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.75 }}>
+                <span>{item.label}</span>
+                <span>{value.toFixed ? value.toFixed(2) : value}</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 999, background: 'rgba(148,163,184,0.2)' }}>
+                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: color }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const focusMatrix = (matrix, id) => {
+    if (!id || typeof window === 'undefined') return
+    try {
+      localStorage.setItem('matrix_focus', JSON.stringify({ matrix, id, ts: Date.now() }))
+    } catch {
+      /* ignore */
+    }
+    window.dispatchEvent(new Event('matrix-focus'))
+    window.location.hash = matrix
+  }
+
+  const handleQuickAnswer = (type) => {
+    if (type === 'priority') {
+      if (!projects.length) return setQuickAnswer({ title: 'Sin datos', text: 'Carga matrices para obtener recomendaciones.', dataPoints: [] })
+      const sorted = [...projects].sort((a, b) => (b.normalized || 0) - (a.normalized || 0))
+      const top = sorted[0]
+      const topPrograms = (top.programs || [top.program]).map((p) => p?.label).filter(Boolean).join(', ') || 'programa sin clasificar'
+      setQuickAnswer({
+        title: 'Prioridad recomendada',
+        text: `Enfócate en ${top.projectName} (${top.type}) porque su impacto normalizado es ${top.normalized.toFixed(2)} y responde al programa ${topPrograms}.`,
+        dataPoints: sorted.slice(0, 3).map((p) => ({ label: p.projectName, value: p.normalized })),
+      })
+    }
+    if (type === 'weak-program') {
+      if (!overallProgramBreakdown.length) return setQuickAnswer({ title: 'Sin datos', text: 'No hay programas evaluados aún.', dataPoints: [] })
+      const weakest = overallProgramBreakdown.reduce((prev, curr) => (curr.avg < prev.avg ? curr : prev))
+      const sorted = [...overallProgramBreakdown].sort((a, b) => a.avg - b.avg).slice(0, 3)
+      setQuickAnswer({
+        title: 'Programa con menor cobertura',
+        text: `${weakest.label} tiene solo ${weakest.count} proyectos y un impacto medio de ${weakest.avg}. Considera asignarle iniciativas FO/DO específicas.`,
+        dataPoints: sorted.map((p) => ({ label: p.label, value: p.avg })),
+      })
+    }
+  }
+
+  const topImpact = useMemo(() => {
+    const ordered = [...filteredProjects].sort((a, b) => (b.normalized || 0) - (a.normalized || 0))
+    return ordered.slice(0, 4).map((p) => ({ label: p.projectName, value: p.normalized || 0 }))
+  }, [filteredProjects])
+
+  const riskSummary = useMemo(() => {
+    const doCount = filteredProjects.filter((p) => p.type === 'DO').length
+    const daCount = filteredProjects.filter((p) => p.type === 'DA').length
+    const coverage = filteredProjects.length ? Number((((doCount + daCount) / filteredProjects.length)).toFixed(2)) : 0
+    return { doCount, daCount, coverage }
+  }, [filteredProjects])
+
+  const miniProgramList = useMemo(() => {
+    const sorted = [...overallProgramBreakdown].sort((a, b) => b.count - a.count)
+    return sorted.slice(0, 3).map((p) => ({ label: p.label, value: p.count }))
+  }, [overallProgramBreakdown])
+
+  const miniTabContent = useMemo(() => {
+    if (miniTab === 'riesgos') {
+      return (
+        <div>
+          <div style={{ fontSize: 13, marginBottom: 8 }}>Cobertura actual de proyectos tipo DO/DA.</div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 120 }}>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>DO activos</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{riskSummary.doCount}</div>
+            </div>
+            <div style={{ minWidth: 120 }}>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>DA activos</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{riskSummary.daCount}</div>
+            </div>
+            <div style={{ minWidth: 160 }}>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>Cobertura riesgo</div>
+              <div style={{ fontSize: 24, fontWeight: 700 }}>{(riskSummary.coverage * 100).toFixed(0)}%</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (miniTab === 'programas') {
+      return (
+        <div>
+          <div style={{ fontSize: 13, marginBottom: 8 }}>Programas con más proyectos priorizados.</div>
+          {renderBars(miniProgramList, '#a855f7')}
+        </div>
+      )
+    }
+    return (
+      <div>
+        <div style={{ fontSize: 13, marginBottom: 8 }}>Top de impacto normalizado.</div>
+        {renderBars(topImpact)}
+      </div>
+    )
+  }, [miniTab, topImpact, riskSummary, miniProgramList])
+
+  const quickAnswerContent = quickAnswer ? (
+    <div>
+      <div style={{ fontWeight: 600 }}>{quickAnswer.title}</div>
+      <div style={{ fontSize: 13, margin: '6px 0 12px' }}>{quickAnswer.text}</div>
+      {renderBars(quickAnswer.dataPoints, '#f472b6')}
+    </div>
+  ) : (
+    <div style={{ fontSize: 13, opacity: 0.8 }}>Selecciona una pregunta para generar una respuesta rápida.</div>
+  )
+
+  if (loading && !dofa) {
+    return <div>Cargando portafolio desde matrices...</div>
+  }
+
+  if (!dofa) {
+    return <div>No pude encontrar datos de la matriz DOFA. Revisa la pestaña DOFA y exporta/importa nuevamente.</div>
+  }
+
+  return (
+    <div>
+      <h2 style={{ margin: '12px 0 8px' }}>Portafolio de proyectos</h2>
+      <p style={{ opacity: 0.8, marginBottom: 12 }}>
+        Se priorizan proyectos a partir de las estrategias DOFA (FO/FA/DO/DA) y los ponderados de MEFI/MEFE para analizar programas, impacto y efectos sobre las matrices.
+      </p>
+
+      <section className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[
+            { key: 'impact', label: 'Impacto' },
+            { key: 'riesgos', label: 'Riesgos' },
+            { key: 'programas', label: 'Programas' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setMiniTab(tab.key)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: 'none',
+                cursor: 'pointer',
+                background: miniTab === tab.key ? 'rgba(59,130,246,0.25)' : 'rgba(148,163,184,0.2)',
+                color: miniTab === tab.key ? '#3b82f6' : 'inherit',
+                fontWeight: 600,
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ marginTop: 12 }}>{miniTabContent}</div>
+      </section>
+
+      <section className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => handleQuickAnswer('priority')} style={{ border: '1px solid rgba(148,163,184,0.5)', padding: '6px 10px', borderRadius: 8, cursor: 'pointer' }}>¿Qué debo priorizar hoy?</button>
+            <button onClick={() => handleQuickAnswer('weak-program')} style={{ border: '1px solid rgba(148,163,184,0.5)', padding: '6px 10px', borderRadius: 8, cursor: 'pointer' }}>¿Qué programa está más débil?</button>
+          </div>
+          <div style={{ flex: 1, minWidth: 220 }}>{quickAnswerContent}</div>
+        </div>
+      </section>
+
+      <section className="card" style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ minWidth: 200 }}>
+          <label style={{ display: 'block', fontSize: 13, opacity: 0.7 }}>Tipo de estrategia</label>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 6 }}>
+            <option value="ALL">Todas</option>
+            <option value="FO">FO</option>
+            <option value="FA">FA</option>
+            <option value="DO">DO</option>
+            <option value="DA">DA</option>
+          </select>
+        </div>
+        <div style={{ minWidth: 220 }}>
+          <label style={{ display: 'block', fontSize: 13, opacity: 0.7 }}>Programa</label>
+          <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 6 }}>
+            <option value="ALL">Todos</option>
+            {programOptions.map((p) => (
+              <option key={p.id} value={p.id}>{p.label}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ minWidth: 160 }}>
+          <label style={{ display: 'block', fontSize: 13, opacity: 0.7 }}>Máx. estrategias por cuadrante</label>
+          <input type="number" min={1} max={20} value={maxPerType} onChange={(e) => setMaxPerType(Number(e.target.value) || 1)} style={{ width: '100%', padding: '6px 8px', borderRadius: 6 }} />
+        </div>
+        <div style={{ minWidth: 220 }}>
+          <label style={{ display: 'block', fontSize: 13, opacity: 0.7 }}>Sesgo hacia estrategias MAFE</label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={mafeBias}
+            onChange={(e) => setMafeBias(Number(e.target.value))}
+            style={{ width: '100%' }}
+          />
+          <div style={{ fontSize: 12, opacity: 0.75 }}>MAFE +{Math.round(mafeBias * 100)}% · Automáticas -{Math.round(mafeBias * 100)}%</div>
+        </div>
+        <div style={{ alignSelf: 'flex-end', marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button onClick={exportCSV} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar portafolio (CSV)</button>
+          <button onClick={() => { setDofa(getLocalJson('dofa_data')); setMefi(getLocalJson('mefi_data')); setMefe(getLocalJson('mefe_data')); setMafe(getLocalJson('mafe_data')) }} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Recargar matrices</button>
+        </div>
+      </section>
+
+      <section className="card" style={{ marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>Proyectos priorizados</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{filteredProjects.length}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>Impacto promedio</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{summary.avg}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>Programas cubiertos</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{summary.programs}</div>
+        </div>
+      </section>
+
+      {programBreakdown.length > 0 && (
+        <section className="card" style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Equilibrio por programa</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {programBreakdown.map((p) => (
+              <div key={p.id} style={{ flex: '1 1 220px', border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, borderRadius: 8, padding: 12 }}>
+                <div style={{ fontWeight: 600 }}>{p.label}</div>
+                <div style={{ fontSize: 13, opacity: 0.7 }}>Proyectos: {p.count}</div>
+                <div style={{ fontSize: 13, opacity: 0.7 }}>Impacto medio: {p.avg}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', flexWrap: 'wrap' }}>
+        <aside style={{ flex: panelOpen ? '0 0 260px' : '0 0 48px', transition: 'all 0.2s ease', border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, borderRadius: 12, padding: 12 }}>
+          <button onClick={() => setPanelOpen((v) => !v)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 600, marginBottom: 12 }}>
+            {panelOpen ? '◀ Ocultar panel' : '▶'}
+          </button>
+          {panelOpen && (
+            <>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Proyectos ({filteredProjects.length})</div>
+              <div style={{ maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {filteredProjects.map((project) => (
+                  <button
+                    key={`${project.id}-nav`}
+                    onClick={() => setActiveProjectId(project.id)}
+                    style={{
+                      textAlign: 'left',
+                      borderRadius: 8,
+                      border: project.id === activeProjectId ? '2px solid rgba(59,130,246,0.5)' : '1px solid rgba(148,163,184,0.4)',
+                      padding: '6px 8px',
+                      background: project.id === activeProjectId ? 'rgba(59,130,246,0.08)' : 'transparent',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{project.projectName}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7 }}>
+                      {project.type} · {(project.programs || [project.program]).map((prog) => prog?.label).filter(Boolean).join(', ')}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {selectedProject && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>Accesos rápidos</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {(selectedProject.sourceInternalIds || []).slice(0, 4).map((id) => (
+                      <React.Fragment key={`internal-${id}`}>
+                        <button onClick={() => focusMatrix('dofa', id)} style={{ border: '1px solid rgba(148,163,184,0.5)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer' }}>DOFA {id}</button>
+                        <button onClick={() => focusMatrix('mefi', id)} style={{ border: '1px solid rgba(148,163,184,0.5)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer' }}>MEFI {id}</button>
+                      </React.Fragment>
+                    ))}
+                    {(selectedProject.sourceExternalIds || []).slice(0, 4).map((id) => (
+                      <React.Fragment key={`external-${id}`}>
+                        <button onClick={() => focusMatrix('dofa', id)} style={{ border: '1px solid rgba(148,163,184,0.5)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer' }}>DOFA {id}</button>
+                        <button onClick={() => focusMatrix('mefe', id)} style={{ border: '1px solid rgba(148,163,184,0.5)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer' }}>MEFE {id}</button>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </aside>
+
+        <section className="card" style={{ flex: '1 1 480px' }}>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Backlog priorizado</div>
+          {filteredProjects.length === 0 && <div>Sin resultados con los filtros seleccionados.</div>}
+          <div style={{ display: 'grid', gap: 12 }}>
+            {filteredProjects.map((project) => (
+              <div
+                key={project.id}
+                ref={(el) => { if (el) projectRefs.current[project.id] = el }}
+                style={{
+                  border: project.id === activeProjectId ? '2px solid rgba(59,130,246,0.6)' : `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`,
+                  borderRadius: 10,
+                  padding: 12,
+                  background: project.id === activeProjectId ? 'rgba(59,130,246,0.05)' : 'transparent',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ fontWeight: 700 }}>{project.projectName}</div>
+                <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 6, background: 'rgba(59,130,246,0.15)' }}>{project.id}</span>
+                {project.mafeId && <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 6, background: 'rgba(168,85,247,0.2)', color: '#a855f7' }}>MAFE {project.mafeId}</span>}
+                <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 6, background: 'rgba(34,197,94,0.18)' }}>Prioridad {project.priority}</span>
+                <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 6, background: 'rgba(250,204,21,0.18)' }}>Impacto {project.impactLabel}</span>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {(project.programs || [project.program]).map((prog) => (
+                    <span key={`${project.id}-${prog?.id}`} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 6, background: 'rgba(148,163,184,0.2)' }}>{prog?.label}</span>
+                  ))}
+                </div>
+                </div>
+                <div style={{ fontSize: 13, opacity: 0.85 }}>{project.description}</div>
+                <div style={{ fontSize: 13, marginTop: 6 }}><strong>Estrategia origen {project.type}:</strong> {project.strategyText}</div>
+                <div style={{ fontSize: 13, marginTop: 6 }}>
+                  <strong>Esfuerzo:</strong> {project.effort} · <strong>Horizonte:</strong> {project.horizon} · <strong>Score:</strong> {project.score}
+                </div>
+                <div style={{ fontSize: 13, marginTop: 6 }}>
+                  <strong>Efecto en matrices:</strong> {project.effects.join(' | ')}
+                </div>
+                <div style={{ fontSize: 13, marginTop: 6 }}>
+                  <strong>KPIs sugeridos:</strong> {project.kpis.join(' · ')}
+                </div>
+                {project.mafeCriteria && project.mafeCriteria.length > 0 && (
+                  <div style={{ fontSize: 13, marginTop: 6 }}>
+                    <strong>Criterios MAFE:</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                      {project.mafeCriteria.map((crit, idx) => (
+                        <span key={`${project.id}-crit-${idx}`} style={{ padding: '2px 6px', borderRadius: 6, background: 'rgba(96,165,250,0.15)', fontSize: 12 }}>
+                          {crit.nombre}: <strong>{crit.valor}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  )
+}

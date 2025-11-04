@@ -6,48 +6,171 @@
       {
         "id": "FO-01",
         "cruce": { "F": ["FI-01", "FI-02"], "O": ["FE-OP-01", "FE-OP-02"] },
-        "enunciado": "Acelerar interoperabilidad y despliegue HA/DR usando el equipo IoT/IA y la arquitectura cloud."
+        "enunciado": "Acelerar interoperabilidad y despliegue HA/DR usando el equipo IoT/IA y la arquitectura cloud.",
+        "criterios": { "atractivo": 4, "ventaja_competitiva": 4, "factibilidad": 3 },
+        "proyectos": [
+          {
+            "id": "FO-01-P1",
+            "nombre": "Arquitectura HA/DR multi-región",
+            "descripcion": "Diseñar y desplegar la topología activa-activa para los nodos críticos de IoT/IA con pruebas de failover trimestrales.",
+            "programas": ["digital", "operaciones"],
+            "horizonte": "0-6 meses",
+            "esfuerzo": "Alta",
+            "kpis": ["SLA crítico ≥99.95%", "Tiempo de recuperación ≤5 min"]
+          },
+          {
+            "id": "FO-01-P2",
+            "nombre": "Kit de interoperabilidad sectorial",
+            "descripcion": "Construir conectores y APIs alineados al manual MinTIC para acelerar integraciones con terceros.",
+            "programas": ["digital", "innovacion"],
+            "horizonte": "0-6 meses",
+            "esfuerzo": "Media",
+            "kpis": ["APIs homologadas", "Integraciones desplegadas"]
+          }
+        ]
       },
       {
         "id": "FO-02",
         "cruce": { "F": ["FI-03"], "O": ["FE-OP-03"] },
-        "enunciado": "Vincular el gobierno de datos a programas de eficiencia energética y medición."
+        "enunciado": "Vincular el gobierno de datos a programas de eficiencia energética y medición.",
+        "criterios": { "atractivo": 3, "ventaja_competitiva": 3, "factibilidad": 4 },
+        "proyectos": [
+          {
+            "id": "FO-02-P1",
+            "nombre": "Data mart de energía y confiabilidad",
+            "descripcion": "Consolidar métricas MTBF/MTTR y kWh en un repositorio auditable para reportes ESG.",
+            "programas": ["digital", "sostenibilidad"],
+            "horizonte": "6-9 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Disponibilidad de datos 24h", "Reportes ESG automatizados"]
+          }
+        ]
       }
     ],
     "DO": [
       {
         "id": "DO-01",
         "cruce": { "D": ["FI-04"], "O": ["FE-OP-01"] },
-        "enunciado": "Apalancar estándares abiertos para facilitar adopción y gestión del cambio."
+        "enunciado": "Apalancar estándares abiertos para facilitar adopción y gestión del cambio.",
+        "criterios": { "atractivo": 3, "impacto": 4, "factibilidad": 3 },
+        "proyectos": [
+          {
+            "id": "DO-01-P1",
+            "nombre": "Playbook de integración abierta",
+            "descripcion": "Definir guías y componentes reutilizables (SDK, plantillas BPMN) para facilitar la adopción de APIs standard.",
+            "programas": ["digital", "cambio"],
+            "horizonte": "6-9 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Procesos migrados", "Usuarios formados"]
+          }
+        ]
       },
       {
         "id": "DO-02",
         "cruce": { "D": ["FI-05"], "O": ["FE-OP-02", "FE-OP-03"] },
-        "enunciado": "Construir un datamart de MTBF/MTTR y ahorro energético con data fiable de la plataforma."
+        "enunciado": "Construir un datamart de MTBF/MTTR y ahorro energético con data fiable de la plataforma.",
+        "criterios": { "atractivo": 4, "impacto": 4, "factibilidad": 2 },
+        "proyectos": [
+          {
+            "id": "DO-02-P1",
+            "nombre": "Motor de calidad de datos operativos",
+            "descripcion": "Implementar reglas automáticas de validación y reconciliación para señales de mantenimiento y energía.",
+            "programas": ["operaciones", "digital"],
+            "horizonte": "9-12 meses",
+            "esfuerzo": "Alta",
+            "kpis": ["Eventos validados", "Alarmas por data incompleta"]
+          },
+          {
+            "id": "DO-02-P2",
+            "nombre": "Tablero financiero de eficiencia",
+            "descripcion": "Exponer KPIs de TCO y ahorros para sostener business cases frente a MinMinas y MinTIC.",
+            "programas": ["sostenibilidad", "cumplimiento"],
+            "horizonte": "9-12 meses",
+            "esfuerzo": "Media",
+            "kpis": ["USD ahorrados", "% proyectos con payback <18m"]
+          }
+        ]
       }
     ],
     "FA": [
       {
         "id": "FA-01",
         "cruce": { "F": ["FI-01"], "A": ["FE-AM-01"] },
-        "enunciado": "Diseñar casos de negocio técnicos que mitiguen objeciones de presupuesto (uptime, TCO)."
+        "enunciado": "Diseñar casos de negocio técnicos que mitiguen objeciones de presupuesto (uptime, TCO).",
+        "criterios": { "atractivo": 4, "riesgo": 3, "factibilidad": 3 },
+        "proyectos": [
+          {
+            "id": "FA-01-P1",
+            "nombre": "Modelos de TCO resiliente",
+            "descripcion": "Documentar beneficios financieros de la modernización (uptime, costos evitados) para agilizar aprobación presupuestal.",
+            "programas": ["cumplimiento", "operaciones"],
+            "horizonte": "6-9 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Casos aprobados", "% CAPEX liberado"]
+          }
+        ]
       },
       {
         "id": "FA-02",
         "cruce": { "F": ["FI-02", "FI-03"], "A": ["FE-AM-02"] },
-        "enunciado": "Endurecer seguridad y trazabilidad para cumplir normativa sin frenar el roadmap."
+        "enunciado": "Endurecer seguridad y trazabilidad para cumplir normativa sin frenar el roadmap.",
+        "criterios": { "atractivo": 3, "ventaja_competitiva": 5, "factibilidad": 4 },
+        "proyectos": [
+          {
+            "id": "FA-02-P1",
+            "nombre": "Cinturón de cumplimiento cloud",
+            "descripcion": "Implementar controles Zero-Trust, cifrado end-to-end y trazabilidad para auditorías.",
+            "programas": ["cumplimiento", "digital"],
+            "horizonte": "6-9 meses",
+            "esfuerzo": "Alta",
+            "kpis": ["Hallazgos críticos", "Tiempo de respuesta auditoría"]
+          }
+        ]
       }
     ],
     "DA": [
       {
         "id": "DA-01",
         "cruce": { "D": ["FI-04", "FI-06"], "A": ["FE-AM-03"] },
-        "enunciado": "Plan de cambio progresivo y onboarding guiado con quick wins operativos."
+        "enunciado": "Plan de cambio progresivo y onboarding guiado con quick wins operativos.",
+        "criterios": { "atractivo": 4, "riesgo": 4, "factibilidad": 3 },
+        "proyectos": [
+          {
+            "id": "DA-01-P1",
+            "nombre": "Academia digital para operaciones",
+            "descripcion": "Formaciones modulares y coaching en sitio para reducir la resistencia al cambio.",
+            "programas": ["cambio"],
+            "horizonte": "6-9 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Horas de capacitación", "NPS del cambio"]
+          },
+          {
+            "id": "DA-01-P2",
+            "nombre": "Programa quick wins OT",
+            "descripcion": "Implementar pilotos con beneficios tangibles para que las cuadrillas adopten la solución.",
+            "programas": ["operaciones", "cambio"],
+            "horizonte": "0-6 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Pilotos completados", "% usuarios activos"]
+          }
+        ]
       },
       {
         "id": "DA-02",
         "cruce": { "D": ["FI-05"], "A": ["FE-AM-01", "FE-AM-02"] },
-        "enunciado": "Fases con hitos medibles y controles de cumplimiento para asegurar liberación de presupuesto."
+        "enunciado": "Fases con hitos medibles y controles de cumplimiento para asegurar liberación de presupuesto.",
+        "criterios": { "atractivo": 3, "riesgo": 5, "factibilidad": 2 },
+        "proyectos": [
+          {
+            "id": "DA-02-P1",
+            "nombre": "Oficina de control normativo",
+            "descripcion": "Crear PMO ligera para garantizar hitos regulatorios y liberar recursos etapa por etapa.",
+            "programas": ["cumplimiento", "operaciones"],
+            "horizonte": "9-12 meses",
+            "esfuerzo": "Media",
+            "kpis": ["Hitos aprobados", "Trámites on-time"]
+          }
+        ]
       }
     ]
   }

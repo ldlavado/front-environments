@@ -20,6 +20,17 @@ export default function MefeMatrix({ data }) {
     } catch { /* ignore */ }
     return data || defaultData
   })
+  const [focus, setFocus] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const stored = localStorage.getItem('matrix_focus')
+      if (!stored) return null
+      const parsed = JSON.parse(stored)
+      return parsed?.matrix === 'mefe' ? parsed : null
+    } catch {
+      return null
+    }
+  })
   const [sumPeso, setSumPeso] = useState(0)
   const [sumPonderado, setSumPonderado] = useState(0)
   const fileRef = useRef(null)
@@ -59,6 +70,27 @@ export default function MefeMatrix({ data }) {
     setSumPonderado(Number(sPond.toFixed(2)))
     try { localStorage.setItem('mefe_data', JSON.stringify(d)) } catch { /* ignore */ }
   }, [d])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return () => {}
+    const onFocusChange = () => {
+      try {
+        const stored = localStorage.getItem('matrix_focus')
+        if (!stored) return setFocus(null)
+        const parsed = JSON.parse(stored)
+        if (parsed?.matrix === 'mefe') setFocus(parsed)
+        else setFocus(null)
+      } catch {
+        setFocus(null)
+      }
+    }
+    window.addEventListener('matrix-focus', onFocusChange)
+    window.addEventListener('storage', onFocusChange)
+    return () => {
+      window.removeEventListener('matrix-focus', onFocusChange)
+      window.removeEventListener('storage', onFocusChange)
+    }
+  }, [])
 
   const styles = {
     table: {
@@ -186,7 +218,7 @@ export default function MefeMatrix({ data }) {
             {(d.factores || []).map((f) => {
               const ponderado = (Number(f.peso) || 0) * (Number(f.calificacion) || 0)
               return (
-                <tr key={f.id}>
+                <tr key={f.id} style={focus?.matrix === 'mefe' && focus?.id === f.id ? { background: 'rgba(59,130,246,0.15)' } : undefined}>
                   <td style={styles.td}>{f.id}</td>
                   <td style={styles.td}><span style={styles.chip(f.tipo)}>{f.tipo}</span></td>
                   <td style={styles.td}>{f.origen || ''}</td>

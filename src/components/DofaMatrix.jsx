@@ -37,6 +37,17 @@ export default function DofaMatrix({ data }) {
   } catch { /* ignore */ }
     return data || defaultData
   })
+  const [focus, setFocus] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const stored = localStorage.getItem('matrix_focus')
+      if (!stored) return null
+      const parsed = JSON.parse(stored)
+      return parsed?.matrix === 'dofa' ? parsed : null
+    } catch {
+      return null
+    }
+  })
   const fileRef = useRef(null)
 
   // Load from public/dofa.json if no external data is passed
@@ -70,6 +81,27 @@ export default function DofaMatrix({ data }) {
   useEffect(() => {
     try { localStorage.setItem('dofa_data', JSON.stringify(d)) } catch { /* ignore */ }
   }, [d])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return () => {}
+    const onFocusChange = () => {
+      try {
+        const stored = localStorage.getItem('matrix_focus')
+        if (!stored) return setFocus(null)
+        const parsed = JSON.parse(stored)
+        if (parsed?.matrix === 'dofa') setFocus(parsed)
+        else setFocus(null)
+      } catch {
+        setFocus(null)
+      }
+    }
+    window.addEventListener('matrix-focus', onFocusChange)
+    window.addEventListener('storage', onFocusChange)
+    return () => {
+      window.removeEventListener('matrix-focus', onFocusChange)
+      window.removeEventListener('storage', onFocusChange)
+    }
+  }, [])
 
   const handleResetDefaults = async () => {
   try { localStorage.removeItem('dofa_data') } catch { /* ignore */ }
@@ -130,8 +162,9 @@ export default function DofaMatrix({ data }) {
 
   const Item = ({ id, texto }) => {
     const pond = getPondMEFI(id) ?? getPondMEFE(id)
+    const isFocused = focus?.id === id && focus?.matrix === 'dofa'
     return (
-      <li style={{ marginBottom: 6 }}>
+      <li style={{ marginBottom: 6, borderRadius: 8, padding: '4px 6px', background: isFocused ? 'rgba(59,130,246,0.15)' : 'transparent' }}>
         <span style={styles.tag}>{id}</span>
         <span>{texto}</span>
         {pond != null && (
