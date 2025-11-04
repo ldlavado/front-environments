@@ -1,4 +1,5 @@
 {
+  "version": "2024-10-05",
   "matriz": "MAFE",
   "descripcion": "Cruzamiento estratégico FO/DO/FA/DA a partir de DOFA",
   "estrategias": {

@@ -49,7 +49,15 @@ const getLocalJson = (key) => {
   return null
 }
 
+const readVersionedLocal = (key, version) => {
+  const saved = getLocalJson(key)
+  if (!saved) return null
+  if (version && saved.version && saved.version !== version) return null
+  return saved
+}
+
 const BASE_URL = (import.meta?.env?.BASE_URL) || '/'
+const MAFE_EXPECTED_VERSION = '2024-10-05'
 
 const resolveAssetPath = (path) => {
   if (!path) return path
@@ -123,7 +131,7 @@ export default function ProjectPortfolio() {
   const [dofa, setDofa] = useState(() => getLocalJson('dofa_data'))
   const [mefi, setMefi] = useState(() => getLocalJson('mefi_data'))
   const [mefe, setMefe] = useState(() => getLocalJson('mefe_data'))
-  const [mafe, setMafe] = useState(() => getLocalJson('mafe_data'))
+  const [mafe, setMafe] = useState(() => readVersionedLocal('mafe_data', MAFE_EXPECTED_VERSION))
   const [loading, setLoading] = useState(false)
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [programFilter, setProgramFilter] = useState('ALL')
@@ -146,7 +154,15 @@ export default function ProjectPortfolio() {
     }
     if (!mefi) fetchMatrix('/mefi.json').then((json) => { if (!cancel && json) setMefi(json) })
     if (!mefe) fetchMatrix('/mefe.json').then((json) => { if (!cancel && json) setMefe(json) })
-    if (!mafe) fetchMatrix('/mafe.json').then((json) => { if (!cancel && json) setMafe(json) })
+    if (!mafe || mafe.version !== MAFE_EXPECTED_VERSION) {
+      fetchMatrix('/mafe.json').then((json) => {
+        if (!cancel && json) {
+          const next = json.version ? json : { ...json, version: MAFE_EXPECTED_VERSION }
+          setMafe(next)
+          try { localStorage.setItem('mafe_data', JSON.stringify(next)) } catch { /* ignore */ }
+        }
+      })
+    }
     return () => { cancel = true }
   }, [dofa, mefi, mefe, mafe])
 

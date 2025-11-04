@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+const MAFE_DATA_VERSION = '2024-10-05'
+
 export default function MafeMatrix({ data }) {
   const defaultData = useMemo(() => ({
+    version: MAFE_DATA_VERSION,
     matriz: 'MAFE',
     descripcion: 'Cruzamiento estratégico FO/DO/FA/DA a partir de DOFA',
     estrategias: { FO: [], DO: [], FA: [], DA: [] },
@@ -10,9 +13,21 @@ export default function MafeMatrix({ data }) {
   const [d, setD] = useState(() => {
     try {
       const saved = localStorage.getItem('mafe_data')
-      if (saved) return JSON.parse(saved)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (!parsed?.version || parsed.version !== MAFE_DATA_VERSION) throw new Error('mafe desactualizada')
+        return parsed
+      }
     } catch { /* ignore */ }
-    return data || defaultData
+    if (data) {
+      return {
+        version: data.version || MAFE_DATA_VERSION,
+        matriz: data.matriz || defaultData.matriz,
+        descripcion: data.descripcion || defaultData.descripcion,
+        estrategias: data.estrategias || defaultData.estrategias,
+      }
+    }
+    return defaultData
   })
   const fileRef = useRef(null)
 
@@ -27,6 +42,7 @@ export default function MafeMatrix({ data }) {
           const json = await res.json()
           if (!cancel && json && typeof json === 'object') {
             setD(prev => ({
+              version: json.version || prev.version || MAFE_DATA_VERSION,
               matriz: json.matriz || prev.matriz,
               descripcion: json.descripcion || prev.descripcion,
               estrategias: json.estrategias || prev.estrategias,
@@ -116,6 +132,7 @@ export default function MafeMatrix({ data }) {
       const json = JSON.parse(text)
       if (!json || typeof json !== 'object') throw new Error('JSON inválido')
       setD({
+        version: json.version || d.version || MAFE_DATA_VERSION,
         matriz: json.matriz || 'MAFE',
         descripcion: json.descripcion || d.descripcion,
         estrategias: json.estrategias || d.estrategias,
