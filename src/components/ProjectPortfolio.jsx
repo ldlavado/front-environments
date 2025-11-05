@@ -141,8 +141,22 @@ export default function ProjectPortfolio() {
   const [activeProjectId, setActiveProjectId] = useState(null)
   const [quickAnswer, setQuickAnswer] = useState(null)
   const [mafeBias, setMafeBias] = useState(0.3)
-  const [expandedPrograms, setExpandedPrograms] = useState(() => new Set())
+  const [expandedPrograms, setExpandedPrograms] = useState(() => [])
   const projectRefs = useRef({})
+  const themeTokens = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return {
+        border: '#2a2f45',
+        highlight: 'rgba(59,130,246,0.18)',
+      }
+    }
+    const root = getComputedStyle(document.documentElement)
+    return {
+      border: root.getPropertyValue('--border')?.trim() || '#2a2f45',
+      highlight: root.getPropertyValue('--highlight-bg')?.trim() || 'rgba(59,130,246,0.18)',
+    }
+  }, [])
+  const expandedSet = useMemo(() => new Set(expandedPrograms), [expandedPrograms])
 
   useEffect(() => {
     let cancel = false
@@ -539,36 +553,28 @@ export default function ProjectPortfolio() {
 
   useEffect(() => {
     if (!programTree.length) {
-      setExpandedPrograms((prev) => {
-        if (prev && prev.size === 0) return prev
-        return new Set()
-      })
+      setExpandedPrograms((prev) => (prev.length === 0 ? prev : []))
       return
     }
     setExpandedPrograms((prev) => {
-      if (!prev || prev.size === 0) {
-        return new Set(programTree.map((entry) => entry.program.id))
+      if (!prev || prev.length === 0) {
+        return programTree.map((entry) => entry.program.id)
       }
       const allowed = new Set(programTree.map((entry) => entry.program.id))
-      let changed = false
-      const next = new Set()
-      prev.forEach((id) => {
-        if (allowed.has(id)) {
-          next.add(id)
-        } else {
-          changed = true
-        }
-      })
-      return changed ? next : prev
+      const next = prev.filter((id) => allowed.has(id))
+      return next.length === prev.length ? prev : next
     })
   }, [programTree])
 
   const toggleProgram = useCallback((programId) => {
     setExpandedPrograms((prev) => {
-      const next = new Set(prev)
-      if (next.has(programId)) next.delete(programId)
-      else next.add(programId)
-      return next
+      const prevSet = new Set(prev)
+      if (prevSet.has(programId)) {
+        prevSet.delete(programId)
+      } else {
+        prevSet.add(programId)
+      }
+      return Array.from(prevSet)
     })
   }, [])
 
@@ -577,10 +583,8 @@ export default function ProjectPortfolio() {
     const host = programTree.find((entry) => entry.projects.some((proj) => proj.id === activeProjectId))
     if (!host) return
     setExpandedPrograms((prev) => {
-      if (prev.has(host.program.id)) return prev
-      const next = new Set(prev)
-      next.add(host.program.id)
-      return next
+      if (prev.includes(host.program.id)) return prev
+      return [...prev, host.program.id]
     })
   }, [activeProjectId, programTree])
 
@@ -843,12 +847,13 @@ export default function ProjectPortfolio() {
         {programTree.length === 0 ? (
           <div style={{ fontSize: 13, opacity: 0.75 }}>No hay proyectos que coincidan con los filtros actuales.</div>
         ) : (
-          <div className="program-tree-diagram">
+          <div className="program-tree-diagram" role="tree" aria-label="Programas y proyectos priorizados">
             {programTree.map(({ program, projects }) => {
-              const isOpen = expandedPrograms.has(program.id)
+              const isOpen = expandedSet.has(program.id)
               const connectors = projects.length > 0
                 ? projects.map((project, idx) => {
-                    const x = ((idx + 0.5) / projects.length) * 100
+                    const position = (idx + 1) / (projects.length + 1)
+                    const x = Math.min(98, Math.max(2, position * 100))
                     return (
                       <path
                         key={`${program.id}-conn-${project.id}`}
@@ -862,10 +867,14 @@ export default function ProjectPortfolio() {
                   })
                 : null
               return (
-                <div key={program.id} className="program-tree-card">
+                <div key={program.id} className="program-tree-card" style={{ borderColor: themeTokens.border }}>
                   <button
                     onClick={() => toggleProgram(program.id)}
                     className={`tree-node tree-node--program${isOpen ? ' tree-node--active' : ''}`}
+                    role="treeitem"
+                    aria-expanded={isOpen}
+                    aria-controls={`program-tree-${program.id}`}
+                    data-program-id={program.id}
                     title="Mostrar / ocultar proyectos"
                   >
                     <span>{program.label}</span>
@@ -880,7 +889,7 @@ export default function ProjectPortfolio() {
                           {connectors}
                         </svg>
                       )}
-                      <div className="tree-projects">
+                      <div className="tree-projects" role="group" id={`program-tree-${program.id}`}>
                         {projects.length === 0 ? (
                           <div className="tree-empty">Sin proyectos asignados</div>
                         ) : (
@@ -889,6 +898,8 @@ export default function ProjectPortfolio() {
                               key={`${program.id}-${project.id}`}
                               onClick={() => setActiveProjectId(project.id)}
                               className={`tree-node tree-node--project${project.id === activeProjectId ? ' tree-node--active' : ''}`}
+                              role="treeitem"
+                              aria-selected={project.id === activeProjectId}
                             >
                               <div className="tree-node__title">{project.projectName}</div>
                               <div className="tree-node__meta">{project.id} · {project.type}</div>
