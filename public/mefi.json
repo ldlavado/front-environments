@@ -14,7 +14,11 @@
       "peso": 0.18,
       "calificacion": 3,
       "ponderado": 0.54,
-      "evidencia": ["Capacidad para integrar sensores y analítica"]
+      "evidencia": [
+        "Capacidad para integrar sensores y analítica",
+        "Aceleradores reutilizables para integración y modelado (ver MAFE FO-01)",
+        "Experiencia aplicando KPIs operativos (MTBF/MTTR) relevantes al negocio (MML PRO-2)"
+      ]
     },
     {
       "id": "FI-02",
@@ -22,7 +26,12 @@
       "nombre": "Arquitectura cloud con buenas prácticas DevOps",
       "peso": 0.16,
       "calificacion": 4,
-      "ponderado": 0.64
+      "ponderado": 0.64,
+      "evidencia": [
+        "Pipelines CI/CD con despliegue continuo que reducen time-to-value (trazable a Render)",
+        "Diseño HA/DR y redundancia multi-región alineado a objetivos de SLA (MEFE FE-OP-02, MAFE FO-01)",
+        "Ambientes reproducibles que mitigan riesgos operativos y facilitan auditoría de cambios"
+      ]
     },
     {
       "id": "FI-03",
@@ -30,7 +39,12 @@
       "nombre": "Gobierno de datos y trazabilidad básica",
       "peso": 0.12,
       "calificacion": 3,
-      "ponderado": 0.36
+      "ponderado": 0.36,
+      "evidencia": [
+        "Esquema y convenciones documentadas que soportan auditoría y gobernanza (DOFA/MEFI/MEFE coherentes)",
+        "Ruta hacia data mart de confiabilidad/energía para reporting gerencial (MAFE FO-02, MML COMP-2)",
+        "Capacidad de trazabilidad de decisiones y supuestos (MML: indicadores, medios de verificación)"
+      ]
     },
     {
       "id": "FI-04",
@@ -38,7 +52,12 @@
       "nombre": "Madurez limitada en gestión del cambio",
       "peso": 0.18,
       "calificacion": 2,
-      "ponderado": 0.36
+      "ponderado": 0.36,
+      "evidencia": [
+        "Riesgo de resistencia del personal identificado como amenaza externa (MEFE FE-AM-03)",
+        "Necesidad de plan de cambio y onboarding estructurado (MAFE DA-01, MML ACT-3)",
+        "Falta de KPIs de adopción (NPS del cambio, % usuarios activos) para seguimiento gerencial"
+      ]
     },
     {
       "id": "FI-05",
@@ -46,7 +65,12 @@
       "nombre": "Brecha en métricas de negocio (MTBF/MTTR) consolidadas",
       "peso": 0.20,
       "calificacion": 2,
-      "ponderado": 0.40
+      "ponderado": 0.40,
+      "evidencia": [
+        "Desalineación con indicadores estratégicos definidos (MML PRO-2, COMP-2)",
+        "Necesidad de datamart y reglas de calidad de datos para confiabilidad/energía (MAFE DO-02-P1, FO-02)",
+        "Ausencia de tablero financiero consolidado para TCO y ahorros (MAFE DO-02-P2)"
+      ]
     },
     {
       "id": "FI-06",
@@ -54,7 +78,12 @@
       "nombre": "Onboarding de usuarios finales aún incipiente",
       "peso": 0.16,
       "calificacion": 3,
-      "ponderado": 0.48
+      "ponderado": 0.48,
+      "evidencia": [
+        "Falta de recorridos guiados y quick wins operativos (MAFE DA-01-P2)",
+        "Capacitación y coaching requeridos para adopción sostenida (MML ACT-3, MAFE DA-01-P1)",
+        "Necesidad de medir satisfacción y uso (NPS del cambio, % usuarios activos) para gestión gerencial"
+      ]
     }
   ],
   "total": 2.78
