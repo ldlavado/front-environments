@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 // Simple card and section styles reusing CSS variables
 const cardStyle = {
@@ -35,6 +36,7 @@ export default function MmlMatrix() {
     }
   })
   const [loading, setLoading] = useState(!data)
+  const matrixRef = useRef(null)
 
   const saveLocal = useCallback((d) => {
     try { localStorage.setItem('mml_data', JSON.stringify(d)) } catch { /* ignore */ }
@@ -91,6 +93,14 @@ export default function MmlMatrix() {
     await loadDefaults()
   }
 
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_mml.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
+
   const fin = data?.fin
   const proposito = data?.proposito
   const componentes = useMemo(() => data?.componentes || [], [data])
@@ -102,13 +112,14 @@ export default function MmlMatrix() {
   if (!data) return <div>No hay datos de MML</div>
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+    <div ref={matrixRef}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }} data-export-ignore="true">
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <input type="file" accept="application/json" onChange={onImport} style={{ display: 'none' }} />
           <span role="button" tabIndex={0} onClick={(e) => e.currentTarget.previousSibling.click()} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.previousSibling.click() }} style={{ padding: '6px 10px', border: '1px solid var(--border, #333)', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</span>
         </label>
         <button onClick={onExport}>Exportar JSON</button>
+        <button onClick={handleExportPng}>Guardar PNG</button>
         <button onClick={resetDefaults}>Restablecer por defecto</button>
       </div>
 

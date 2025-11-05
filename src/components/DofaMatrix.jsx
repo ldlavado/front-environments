@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 // Simple 2x2 DOFA matrix visualization
 // Props:
@@ -49,6 +50,7 @@ export default function DofaMatrix({ data }) {
     }
   })
   const fileRef = useRef(null)
+  const matrixRef = useRef(null)
 
   // Load from public/dofa.json if no external data is passed
   useEffect(() => {
@@ -100,6 +102,26 @@ export default function DofaMatrix({ data }) {
     return () => {
       window.removeEventListener('matrix-focus', onFocusChange)
       window.removeEventListener('storage', onFocusChange)
+    }
+  }, [])
+
+  const skipNextCleanup = useRef(true)
+  useEffect(() => {
+    if (typeof window === 'undefined') return () => {}
+    return () => {
+      if (skipNextCleanup.current) {
+        skipNextCleanup.current = false
+        return
+      }
+      try {
+        const stored = localStorage.getItem('matrix_focus')
+        if (!stored) return
+        const parsed = JSON.parse(stored)
+        if (parsed?.matrix === 'dofa') {
+          localStorage.removeItem('matrix_focus')
+          window.dispatchEvent(new Event('matrix-focus'))
+        }
+      } catch { /* ignore */ }
     }
   }, [])
 
@@ -162,9 +184,23 @@ export default function DofaMatrix({ data }) {
 
   const Item = ({ id, texto }) => {
     const pond = getPondMEFI(id) ?? getPondMEFE(id)
-    const isFocused = focus?.id === id && focus?.matrix === 'dofa'
+    const matchesFocus = () => {
+      if (!focus || focus?.matrix !== 'dofa') return false
+      if (focus.id && focus.id === id) return true
+      if (Array.isArray(focus.ids) && focus.ids.includes(id)) return true
+      return false
+    }
+    const isFocused = matchesFocus()
     return (
-      <li style={{ marginBottom: 6, borderRadius: 8, padding: '4px 6px', background: isFocused ? 'rgba(59,130,246,0.15)' : 'transparent' }}>
+      <li
+        style={{
+          marginBottom: 6,
+          borderRadius: 8,
+          padding: '4px 6px',
+          background: isFocused ? 'rgba(59,130,246,0.18)' : 'transparent',
+          border: isFocused ? '1px solid rgba(59,130,246,0.45)' : '1px solid transparent',
+        }}
+      >
         <span style={styles.tag}>{id}</span>
         <span>{texto}</span>
         {pond != null && (
@@ -278,16 +314,25 @@ export default function DofaMatrix({ data }) {
     }
   }
 
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_dofa.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
+
   return (
-    <div>
+    <div ref={matrixRef}>
       <h2 style={{ margin: '12px 0 8px' }}>Matriz DOFA</h2>
       <div style={{ ...styles.subtitle }}>{d.descripcion}</div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', gap: 8, margin: '8px 0 14px' }}>
+      <div style={{ display: 'flex', gap: 8, margin: '8px 0 14px' }} data-export-ignore="true">
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleFileChange} />
         <button onClick={handlePickFile} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</button>
   <button onClick={handleExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
+  <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
   <button onClick={exportStrategiesCSV} title="Exportar estrategias FO/FA/DO/DA a CSV" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar estrategias (CSV)</button>
         <button onClick={handleResetDefaults} title="Restaurar desde public/dofa.json" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>

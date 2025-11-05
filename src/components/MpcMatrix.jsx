@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 export default function MpcMatrix({ data }) {
   const defaultData = useMemo(() => ({
@@ -15,6 +16,7 @@ export default function MpcMatrix({ data }) {
     return data || defaultData
   })
   const fileRef = useRef(null)
+  const matrixRef = useRef(null)
 
   useEffect(() => {
     let cancel = false
@@ -100,6 +102,14 @@ export default function MpcMatrix({ data }) {
     }
   }
 
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_mpc.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
+
   const updatePeso = (id, value) => {
     setD(prev => ({
       ...prev,
@@ -124,15 +134,17 @@ export default function MpcMatrix({ data }) {
       <h2 style={{ margin: '12px 0 8px' }}>Matriz MPC</h2>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
-      <div style={{ ...styles.controls }}>
+      <div style={{ ...styles.controls }} data-export-ignore="true">
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={onFileChange} />
         <button onClick={pick} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</button>
         <button onClick={onExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
+        <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
         <button onClick={onReset} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
 
-      <div className="card">
-        <table style={styles.table}>
+      <div ref={matrixRef}>
+        <div className="card">
+          <table style={styles.table}>
           <thead>
             <tr>
               <th style={styles.th}>Factor</th>
@@ -178,11 +190,12 @@ export default function MpcMatrix({ data }) {
               ))}
             </tr>
           </tfoot>
-        </table>
-      </div>
+          </table>
+        </div>
 
-      <div style={{ marginTop: 10, opacity: 0.8 }}>
-        Nota: La suma de pesos debe aproximar 1.0. Los totales ponderados por competidor se recalculan desde los factores.
+        <div style={{ marginTop: 10, opacity: 0.8 }}>
+          Nota: La suma de pesos debe aproximar 1.0. Los totales ponderados por competidor se recalculan desde los factores.
+        </div>
       </div>
     </div>
   )

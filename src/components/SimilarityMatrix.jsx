@@ -1,9 +1,18 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 function dot(a, b) { return a.reduce((s, v, i) => s + v * b[i], 0) }
 function norm(a) { return Math.sqrt(a.reduce((s, v) => s + v * v, 0)) }
 
 export default function SimilarityMatrix({ stakeholders, environments }) {
+  const matrixRef = useRef(null)
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_similitud.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
   const { names, matrix } = useMemo(() => {
     const names = stakeholders.map((s) => s.stakeholder)
     const vectors = stakeholders.map((s) => environments.map((env) => Object.keys(s.variables || {}).reduce((acc, v) => acc + Number((s.variables[v].impacto_pct?.[env] || 0)), 0)))
@@ -15,7 +24,11 @@ export default function SimilarityMatrix({ stakeholders, environments }) {
   }, [stakeholders, environments])
 
   return (
-    <section className="card" style={{ padding: 12 }}>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }} data-export-ignore="true">
+        <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
+      </div>
+    <section ref={matrixRef} className="card" style={{ padding: 12 }}>
       <h2>Similitud entre stakeholders (cosine)</h2>
       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
@@ -33,5 +46,6 @@ export default function SimilarityMatrix({ stakeholders, environments }) {
         </tbody>
       </table>
     </section>
+    </div>
   )
 }

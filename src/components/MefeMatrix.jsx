@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 export default function MefeMatrix({ data }) {
   const defaultData = useMemo(() => ({
@@ -34,6 +35,7 @@ export default function MefeMatrix({ data }) {
   const [sumPeso, setSumPeso] = useState(0)
   const [sumPonderado, setSumPonderado] = useState(0)
   const fileRef = useRef(null)
+  const matrixRef = useRef(null)
 
   // Load from public/mefe.json if no external data is passed
   useEffect(() => {
@@ -162,6 +164,14 @@ export default function MefeMatrix({ data }) {
     }
   }
 
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_mefe.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
+
   const handleResetDefaults = async () => {
     try { localStorage.removeItem('mefe_data') } catch { /* ignore */ }
     try {
@@ -194,15 +204,17 @@ export default function MefeMatrix({ data }) {
       <h2 style={{ margin: '12px 0 8px' }}>Matriz MEFE</h2>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
-      <div style={{ ...styles.controls }}>
+      <div style={{ ...styles.controls }} data-export-ignore="true">
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleFileChange} />
         <button onClick={handlePickFile} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</button>
         <button onClick={handleExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
+        <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
         <button onClick={handleResetDefaults} title="Restaurar desde public/mefe.json" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
 
-      <div className="card">
-        <table style={styles.table}>
+      <div ref={matrixRef}>
+        <div className="card">
+          <table style={styles.table}>
           <thead>
             <tr>
               <th style={styles.th}>ID</th>
@@ -270,11 +282,12 @@ export default function MefeMatrix({ data }) {
               <td style={styles.td}><strong>{sumPonderado.toFixed(2)}</strong></td>
             </tr>
           </tfoot>
-        </table>
-      </div>
+          </table>
+        </div>
 
-      <div style={{ marginTop: 10, opacity: 0.8 }}>
-        Nota: La suma de pesos debe aproximar 1.0. El total ponderado es guía e idealmente coincide con "total" del JSON ({typeof d.total === 'number' ? d.total.toFixed(2) : 'N/A'}).
+        <div style={{ marginTop: 10, opacity: 0.8 }}>
+          Nota: La suma de pesos debe aproximar 1.0. El total ponderado es guía e idealmente coincide con "total" del JSON ({typeof d.total === 'number' ? d.total.toFixed(2) : 'N/A'}).
+        </div>
       </div>
     </div>
   )

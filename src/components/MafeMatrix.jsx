@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 
 const MAFE_DATA_VERSION = '2024-10-05'
 
@@ -30,6 +31,7 @@ export default function MafeMatrix({ data }) {
     return defaultData
   })
   const fileRef = useRef(null)
+  const matrixRef = useRef(null)
 
   // load from public
   useEffect(() => {
@@ -101,17 +103,6 @@ export default function MafeMatrix({ data }) {
   ]), [])
 
   const styles = {
-    modalOverlay: {
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-    },
-    modal: {
-      background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg') || '#0b1220',
-      color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg') || '#e5e7eb',
-      border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#253050'}`,
-      borderRadius: 10,
-      padding: 16,
-      width: 'min(680px, 94vw)'
-    },
     tag: {
       display: 'inline-block',
       fontSize: 12,
@@ -195,101 +186,6 @@ export default function MafeMatrix({ data }) {
     }
   }
 
-  const promoteToMML = (estr) => {
-    // Open modal to choose Component or Activity
-    setPromo({ open: true, estr })
-  }
-
-  // Promotion modal state
-  const [promo, setPromo] = useState({ open: false, estr: null })
-  const [promoType, setPromoType] = useState('actividad') // 'actividad' | 'componente'
-  const [form, setForm] = useState({
-    id: '',
-    resultado: '',
-    descripcion: '',
-    indicadores: '', // CSV nombre|meta|MV
-    insumos: '',
-    supuestos: '',
-  })
-
-  useEffect(() => {
-    if (!promo.open || !promo.estr) return
-    const base = promo.estr
-    const seedText = `${base.id ? base.id + ': ' : ''}${base.enunciado}`
-    const seedInsumos = []
-    if (base.cruce?.F?.length) seedInsumos.push('Apalancar F: ' + base.cruce.F.join(', '))
-    if (base.cruce?.D?.length) seedInsumos.push('Mitigar D: ' + base.cruce.D.join(', '))
-    if (base.cruce?.O?.length) seedInsumos.push('Aprovechar O: ' + base.cruce.O.join(', '))
-    if (base.cruce?.A?.length) seedInsumos.push('Mitigar A: ' + base.cruce.A.join(', '))
-    setPromoType('actividad')
-    setForm({ id: '', resultado: seedText, descripcion: seedText, indicadores: '', insumos: seedInsumos.join('; '), supuestos: 'Recursos y patrocinios disponibles' })
-  }, [promo.open, promo.estr])
-
-  const ensureMML = async () => {
-    // Make sure mml_data exists in localStorage, else fetch defaults
-    try {
-      const raw = localStorage.getItem('mml_data')
-      if (raw) return JSON.parse(raw)
-    } catch { /* ignore */ }
-    try {
-      const res = await fetch('/mml.json', { cache: 'no-store' })
-      const json = await res.json()
-      try { localStorage.setItem('mml_data', JSON.stringify(json)) } catch { /* ignore */ }
-      return json
-    } catch {
-      return null
-    }
-  }
-
-  const parseIndicators = (str) => {
-    // Format: name|meta|MV; name2|meta2|MV2
-    const arr = (str || '').split(';').map(s => s.trim()).filter(Boolean)
-    return arr.map((row, idx) => {
-      const [nombre, meta, mv] = row.split('|').map(x => (x || '').trim())
-      return { id: `IND-${idx + 1}`, nombre, meta: meta || '', medio_verificacion: mv || '' }
-    })
-  }
-
-  const onSavePromo = async () => {
-    try {
-      const mml = await ensureMML()
-      if (!mml) {
-        alert('No se pudo inicializar MML')
-        return
-      }
-      const next = { ...mml }
-      if (promoType === 'componente') {
-        const list = Array.isArray(next.componentes) ? [...next.componentes] : []
-        const newId = form.id?.trim() || `COMP-${list.length + 1}`
-        const item = {
-          id: newId,
-          resultado: form.resultado || form.descripcion,
-          indicadores: parseIndicators(form.indicadores),
-          supuestos: (form.supuestos || '').split(';').map(s=>s.trim()).filter(Boolean),
-        }
-        list.push(item)
-        next.componentes = list
-        localStorage.setItem('mml_data', JSON.stringify(next))
-        alert(`Componente creado: ${newId}`)
-      } else {
-        const list = Array.isArray(next.actividades) ? [...next.actividades] : []
-        const newId = form.id?.trim() || `ACT-${list.length + 1}`
-        const item = {
-          id: newId,
-          descripcion: form.descripcion || form.resultado,
-          insumos: (form.insumos || '').split(';').map(s=>s.trim()).filter(Boolean),
-          supuestos: (form.supuestos || '').split(';').map(s=>s.trim()).filter(Boolean),
-        }
-        list.push(item)
-        next.actividades = list
-        localStorage.setItem('mml_data', JSON.stringify(next))
-        alert(`Actividad creada: ${newId}`)
-      }
-      setPromo({ open: false, estr: null })
-    } catch (err) {
-      alert('Error al guardar: ' + err.message)
-    }
-  }
   const onReset = async () => {
     try { localStorage.removeItem('mafe_data') } catch { /* ignore */ }
     try {
@@ -302,16 +198,46 @@ export default function MafeMatrix({ data }) {
     }
   }
 
+  const handleExportPng = useCallback(async () => {
+    try {
+      await downloadElementAsPng(matrixRef.current, 'matriz_mafe.png')
+    } catch (err) {
+      alert(err.message)
+    }
+  }, [])
+
+  const focusDofaElements = useCallback((cruce) => {
+    if (typeof window === 'undefined') return
+    const ids = ['F', 'D', 'O', 'A']
+      .flatMap((key) => Array.isArray(cruce?.[key]) ? cruce[key] : [])
+      .map((id) => String(id || '').trim())
+      .filter(Boolean)
+    if (!ids.length) return
+    const payload = {
+      matrix: 'dofa',
+      ids: Array.from(new Set(ids)),
+      from: 'mafe',
+      ts: Date.now(),
+    }
+    try { localStorage.setItem('matrix_focus', JSON.stringify(payload)) } catch { /* ignore */ }
+    if (window.location.hash !== '#dofa') {
+      window.location.hash = 'dofa'
+    }
+    window.dispatchEvent(new Event('matrix-focus'))
+    setTimeout(() => window.dispatchEvent(new Event('matrix-focus')), 60)
+  }, [])
+
   return (
     <>
-    <div>
+    <div ref={matrixRef}>
       <h2 style={{ margin: '12px 0 8px' }}>Matriz MAFE</h2>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
-      <div style={{ display: 'flex', gap: 8, margin: '8px 0 14px' }}>
+      <div style={{ display: 'flex', gap: 8, margin: '8px 0 14px' }} data-export-ignore="true">
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={onFileChange} />
         <button onClick={filePick} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</button>
   <button onClick={onExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
+  <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
   <button onClick={exportCSV} title="Exportar estrategias a CSV" style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar estrategias (CSV)</button>
         <button onClick={onReset} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
@@ -332,13 +258,27 @@ export default function MafeMatrix({ data }) {
                     <span style={styles.tag}>{es.id}</span>
                     <span>{es.enunciado}</span>
                     <span style={{ ...styles.tag, marginLeft: 8 }}>score: {es.score.toFixed(2)}</span>
-                    <button onClick={() => promoteToMML(es)} style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 6, border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, cursor: 'pointer' }}>Promover a MML</button>
                     <div style={{ marginTop: 4, opacity: 0.8 }}>
                       {es.cruce?.F && <span style={{ ...styles.tag }}>F: {es.cruce.F.join(', ')}</span>}
                       {es.cruce?.D && <span style={{ ...styles.tag }}>D: {es.cruce.D.join(', ')}</span>}
                       {es.cruce?.O && <span style={{ ...styles.tag }}>O: {es.cruce.O.join(', ')}</span>}
                       {es.cruce?.A && <span style={{ ...styles.tag }}>A: {es.cruce.A.join(', ')}</span>}
                     </div>
+                    <button
+                      onClick={() => focusDofaElements(es.cruce)}
+                      style={{
+                        marginTop: 6,
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`,
+                        cursor: 'pointer',
+                        background: 'transparent',
+                        color: 'inherit',
+                      }}
+                      data-export-ignore="true"
+                    >
+                      Ver en DOFA
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -347,65 +287,6 @@ export default function MafeMatrix({ data }) {
         })}
       </div>
     </div>
-    {promo.open && (
-      <div style={styles.modalOverlay} role="dialog" aria-modal="true">
-        <div style={styles.modal}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0 }}>Promover estrategia a MML</h3>
-            <button onClick={() => setPromo({ open: false, estr: null })} aria-label="Cerrar" style={{ border: 'none', background: 'transparent', color: 'inherit', fontSize: 18, cursor: 'pointer' }}>×</button>
-          </div>
-          <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-            <div>
-              <label style={{ marginRight: 8 }}>
-                <input type="radio" name="ptype" checked={promoType==='actividad'} onChange={()=>setPromoType('actividad')} /> Actividad
-              </label>
-              <label>
-                <input type="radio" name="ptype" checked={promoType==='componente'} onChange={()=>setPromoType('componente')} /> Componente
-              </label>
-            </div>
-            <div>
-              <label>ID (opcional):</label>
-              <input value={form.id} onChange={(e)=>setForm(f=>({ ...f, id: e.target.value }))} style={{ width: '100%' }} />
-            </div>
-            {promoType === 'componente' ? (
-              <>
-                <div>
-                  <label>Resultado del componente:</label>
-                  <textarea value={form.resultado} onChange={(e)=>setForm(f=>({ ...f, resultado: e.target.value }))} rows={3} style={{ width: '100%' }} />
-                </div>
-                <div>
-                  <label>Indicadores (nombre|meta|MV; ...):</label>
-                  <textarea value={form.indicadores} onChange={(e)=>setForm(f=>({ ...f, indicadores: e.target.value }))} rows={2} style={{ width: '100%' }} placeholder="Exactitud F1|≥0.80|Logs de model serving; Cobertura|≥90%|Inventario" />
-                </div>
-                <div>
-                  <label>Supuestos (separa con ;):</label>
-                  <input value={form.supuestos} onChange={(e)=>setForm(f=>({ ...f, supuestos: e.target.value }))} style={{ width: '100%' }} />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label>Descripción de la actividad:</label>
-                  <textarea value={form.descripcion} onChange={(e)=>setForm(f=>({ ...f, descripcion: e.target.value }))} rows={3} style={{ width: '100%' }} />
-                </div>
-                <div>
-                  <label>Insumos (separa con ;):</label>
-                  <input value={form.insumos} onChange={(e)=>setForm(f=>({ ...f, insumos: e.target.value }))} style={{ width: '100%' }} />
-                </div>
-                <div>
-                  <label>Supuestos (separa con ;):</label>
-                  <input value={form.supuestos} onChange={(e)=>setForm(f=>({ ...f, supuestos: e.target.value }))} style={{ width: '100%' }} />
-                </div>
-              </>
-            )}
-          </div>
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <button onClick={() => setPromo({ open: false, estr: null })}>Cancelar</button>
-            <button onClick={onSavePromo} style={{ fontWeight: 700 }}>Guardar en MML</button>
-          </div>
-        </div>
-      </div>
-    )}
   </>
   )
 }
