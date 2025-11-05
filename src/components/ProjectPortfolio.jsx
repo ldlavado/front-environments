@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const PROGRAM_RULES = [
   { id: 'digital', label: 'Transformación digital & datos', keywords: ['dato', 'data', 'cloud', 'iot', 'interoperabilidad', 'analítica', 'sensores', 'automat', 'devops', 'ia'] },
@@ -141,6 +141,7 @@ export default function ProjectPortfolio() {
   const [activeProjectId, setActiveProjectId] = useState(null)
   const [quickAnswer, setQuickAnswer] = useState(null)
   const [mafeBias, setMafeBias] = useState(0.3)
+  const [expandedPrograms, setExpandedPrograms] = useState(() => new Set())
   const projectRefs = useRef({})
 
   useEffect(() => {
@@ -515,6 +516,74 @@ export default function ProjectPortfolio() {
     }))
   }, [projects])
 
+  const programTree = useMemo(() => {
+    const map = new Map()
+    filteredProjects.forEach((project) => {
+      (project.programs || [project.program]).forEach((prog) => {
+        if (!prog) return
+        const programId = prog.id || 'otros'
+        const programLabel = prog.label || prog.id || 'Otros programas'
+        if (!map.has(programId)) {
+          map.set(programId, { program: { id: programId, label: programLabel }, projects: [] })
+        }
+        map.get(programId).projects.push(project)
+      })
+    })
+    return Array.from(map.values())
+      .map((entry) => ({
+        ...entry,
+        projects: entry.projects.slice().sort((a, b) => a.projectName.localeCompare(b.projectName)),
+      }))
+      .sort((a, b) => a.program.label.localeCompare(b.program.label))
+  }, [filteredProjects])
+
+  useEffect(() => {
+    if (!programTree.length) {
+      setExpandedPrograms((prev) => {
+        if (prev && prev.size === 0) return prev
+        return new Set()
+      })
+      return
+    }
+    setExpandedPrograms((prev) => {
+      if (!prev || prev.size === 0) {
+        return new Set(programTree.map((entry) => entry.program.id))
+      }
+      const allowed = new Set(programTree.map((entry) => entry.program.id))
+      let changed = false
+      const next = new Set()
+      prev.forEach((id) => {
+        if (allowed.has(id)) {
+          next.add(id)
+        } else {
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [programTree])
+
+  const toggleProgram = useCallback((programId) => {
+    setExpandedPrograms((prev) => {
+      const next = new Set(prev)
+      if (next.has(programId)) next.delete(programId)
+      else next.add(programId)
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!activeProjectId) return
+    const host = programTree.find((entry) => entry.projects.some((proj) => proj.id === activeProjectId))
+    if (!host) return
+    setExpandedPrograms((prev) => {
+      if (prev.has(host.program.id)) return prev
+      const next = new Set(prev)
+      next.add(host.program.id)
+      return next
+    })
+  }, [activeProjectId, programTree])
+
   useEffect(() => {
     if (!filteredProjects.length) {
       setActiveProjectId(null)
@@ -765,8 +834,76 @@ export default function ProjectPortfolio() {
         </div>
         <div>
           <div style={{ fontSize: 12, opacity: 0.7 }}>Programas cubiertos</div>
-          <div style={{ fontSize: 24, fontWeight: 700 }}>{summary.programs}</div>
-        </div>
+      <div style={{ fontSize: 24, fontWeight: 700 }}>{summary.programs}</div>
+    </div>
+  </section>
+
+      <section className="card" style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Árbol de programas y proyectos</div>
+        {programTree.length === 0 ? (
+          <div style={{ fontSize: 13, opacity: 0.75 }}>No hay proyectos que coincidan con los filtros actuales.</div>
+        ) : (
+          <div className="program-tree-diagram">
+            {programTree.map(({ program, projects }) => {
+              const isOpen = expandedPrograms.has(program.id)
+              const connectors = projects.length > 0
+                ? projects.map((project, idx) => {
+                    const x = ((idx + 0.5) / projects.length) * 100
+                    return (
+                      <path
+                        key={`${program.id}-conn-${project.id}`}
+                        d={`M50 0 L50 20 L${x} 40`}
+                        fill="none"
+                        stroke="rgba(148,163,184,0.45)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    )
+                  })
+                : null
+              return (
+                <div key={program.id} className="program-tree-card">
+                  <button
+                    onClick={() => toggleProgram(program.id)}
+                    className={`tree-node tree-node--program${isOpen ? ' tree-node--active' : ''}`}
+                    title="Mostrar / ocultar proyectos"
+                  >
+                    <span>{program.label}</span>
+                    <span className="tree-node__count">{projects.length} proyectos</span>
+                    <span className="tree-node__chevron">{isOpen ? '▾' : '▸'}</span>
+                  </button>
+                  {isOpen && (
+                    <>
+                      {projects.length > 0 && (
+                        <svg className="tree-connectors" viewBox="0 0 100 40" preserveAspectRatio="none">
+                          <line x1="50" y1="0" x2="50" y2="20" stroke="rgba(148,163,184,0.45)" strokeWidth="1.5" strokeLinecap="round" />
+                          {connectors}
+                        </svg>
+                      )}
+                      <div className="tree-projects">
+                        {projects.length === 0 ? (
+                          <div className="tree-empty">Sin proyectos asignados</div>
+                        ) : (
+                          projects.map((project) => (
+                            <button
+                              key={`${program.id}-${project.id}`}
+                              onClick={() => setActiveProjectId(project.id)}
+                              className={`tree-node tree-node--project${project.id === activeProjectId ? ' tree-node--active' : ''}`}
+                            >
+                              <div className="tree-node__title">{project.projectName}</div>
+                              <div className="tree-node__meta">{project.id} · {project.type}</div>
+                              <div className="tree-node__meta">Prioridad {project.priority} · Impacto {project.impactLabel}</div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       {programBreakdown.length > 0 && (

@@ -110,3 +110,99 @@ th, td {
   padding: 12px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
+
+.program-tree-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.program-tree-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.18);
+  position: relative;
+}
+
+.program-tree-card .tree-connectors {
+  width: 100%;
+  height: 48px;
+  margin: 4px 0;
+  display: block;
+}
+
+.tree-node {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(148, 163, 184, 0.12);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-width: 140px;
+}
+
+.tree-node:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
+}
+
+.tree-node--program {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.tree-node--program .tree-node__chevron {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.tree-node--program .tree-node__count {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.tree-node--project {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.tree-node--active {
+  border-color: rgba(59, 130, 246, 0.7);
+  background: rgba(59, 130, 246, 0.18);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
+}
+
+.tree-node__title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tree-node__meta {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.tree-projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.tree-empty {
+  font-size: 12px;
+  opacity: 0.7;
+  text-align: center;
+}
