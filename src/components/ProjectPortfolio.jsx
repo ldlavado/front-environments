@@ -471,6 +471,24 @@ export default function ProjectPortfolio() {
 
   const projects = useMemo(() => prioritizedStrategies.map((strategy, idx) => buildProject(strategy, idx)), [prioritizedStrategies])
 
+  const parseHorizonMonths = useCallback((horizon) => {
+    if (!horizon) return 12
+    const text = String(horizon).toLowerCase()
+    const matches = text.match(/\d+/g)
+    if (matches && matches.length) {
+      const values = matches
+        .map((n) => Number(n))
+        .filter((n) => Number.isFinite(n))
+      if (values.length) {
+        return Math.max(...values)
+      }
+    }
+    if (text.includes('corto')) return 6
+    if (text.includes('medio')) return 12
+    if (text.includes('largo')) return 18
+    return 12
+  }, [])
+
   const riskCoverage = useMemo(() => {
     const amenazas = Array.isArray(dofa?.amenazas) ? dofa.amenazas : []
     if (!amenazas.length) {
@@ -523,6 +541,120 @@ export default function ProjectPortfolio() {
       return typeOk && programOk
     })
   }, [projects, typeFilter, programFilter])
+
+  const impactTimeline = useMemo(() => {
+    const points = filteredProjects.map((project) => {
+      const months = parseHorizonMonths(project.horizon)
+      const impact = Number(project.normalized ?? 0)
+      return {
+        project,
+        months,
+        impact,
+      }
+    }).filter((point) => Number.isFinite(point.months) && Number.isFinite(point.impact))
+    if (!points.length) return { points: [], maxMonths: 0, minMonths: 0 }
+    const maxMonths = Math.max(12, ...points.map((p) => p.months))
+    const minMonths = Math.min(...points.map((p) => p.months))
+    return { points, maxMonths, minMonths }
+  }, [filteredProjects, parseHorizonMonths])
+
+  const timelineSummary = useMemo(() => {
+    const impactThreshold = 0.6
+    const horizonThreshold = 12
+    const buckets = {
+      highShort: 0,
+      highLong: 0,
+      lowShort: 0,
+      lowLong: 0,
+    }
+    impactTimeline.points.forEach(({ impact, months }) => {
+      const highImpact = impact >= impactThreshold
+      const shortHorizon = months <= horizonThreshold
+      if (highImpact && shortHorizon) buckets.highShort += 1
+      else if (highImpact && !shortHorizon) buckets.highLong += 1
+      else if (!highImpact && shortHorizon) buckets.lowShort += 1
+      else buckets.lowLong += 1
+    })
+    return { buckets, impactThreshold, horizonThreshold }
+  }, [impactTimeline])
+
+  const renderTimelineScatter = useCallback(() => {
+    if (!impactTimeline.points.length) {
+      return <div style={{ fontSize: 13, opacity: 0.7 }}>Sin datos suficientes. Ajusta filtros o completa horizontes.</div>
+    }
+    const padding = { top: 12, right: 20, bottom: 32, left: 36 }
+    const width = 420
+    const height = 220
+    const innerWidth = width - padding.left - padding.right
+    const innerHeight = height - padding.top - padding.bottom
+    const maxMonths = Math.max(impactTimeline.maxMonths, 1)
+    const monthsTicks = [0, Math.min(6, maxMonths), Math.min(12, maxMonths), maxMonths].filter((v, idx, arr) => idx === 0 || v !== arr[idx - 1])
+    const yTicks = [0, 0.5, 1]
+    const colorByType = {
+      FO: '#3b82f6',
+      FA: '#8b5cf6',
+      DO: '#ef4444',
+      DA: '#f97316',
+    }
+    const circleRadius = 6
+    const xScale = (months) => padding.left + (months / maxMonths) * innerWidth
+    const yScale = (impact) => padding.top + innerHeight - (impact * innerHeight)
+    const horizonThresholdX = xScale(timelineSummary.horizonThreshold)
+    const impactThresholdY = yScale(timelineSummary.impactThreshold)
+
+    return (
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Impacto vs horizonte">
+        <rect x={padding.left} y={padding.top} width={innerWidth} height={innerHeight} fill="rgba(148,163,184,0.08)" />
+        <line x1={padding.left} y1={padding.top + innerHeight} x2={padding.left + innerWidth} y2={padding.top + innerHeight} stroke="rgba(148,163,184,0.6)" strokeWidth="1.5" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + innerHeight} stroke="rgba(148,163,184,0.6)" strokeWidth="1.5" />
+        <line x1={horizonThresholdX} y1={padding.top} x2={horizonThresholdX} y2={padding.top + innerHeight} stroke="rgba(59,130,246,0.35)" strokeDasharray="4 3" />
+        <line x1={padding.left} y1={impactThresholdY} x2={padding.left + innerWidth} y2={impactThresholdY} stroke="rgba(59,130,246,0.35)" strokeDasharray="4 3" />
+
+        {monthsTicks.map((tick) => {
+          const x = xScale(tick)
+          return (
+            <g key={`x-${tick}`}>
+              <line x1={x} y1={padding.top + innerHeight} x2={x} y2={padding.top + innerHeight + 6} stroke="rgba(148,163,184,0.6)" />
+              <text x={x} y={padding.top + innerHeight + 22} fontSize="11" textAnchor="middle" fill="rgba(148,163,184,0.9)">
+                {Math.round(tick)}m
+              </text>
+            </g>
+          )
+        })}
+        {yTicks.map((tick) => {
+          const y = yScale(tick)
+          return (
+            <g key={`y-${tick}`}>
+              <line x1={padding.left - 6} y1={y} x2={padding.left} y2={y} stroke="rgba(148,163,184,0.6)" />
+              <text x={padding.left - 10} y={y + 4} fontSize="11" textAnchor="end" fill="rgba(148,163,184,0.9)">
+                {Math.round(tick * 100)}%
+              </text>
+            </g>
+          )
+        })}
+
+        {impactTimeline.points.map(({ project, months, impact }) => {
+          const x = xScale(Math.min(months, maxMonths))
+          const y = yScale(Math.max(0, Math.min(impact, 1)))
+          const color = colorByType[project.type] || '#38bdf8'
+          return (
+            <g key={`pt-${project.id}`} onClick={() => setActiveProjectId(project.id)} style={{ cursor: 'pointer' }}>
+              <circle cx={x} cy={y} r={circleRadius} fill={color} opacity={project.id === activeProjectId ? 0.95 : 0.75} stroke={project.id === activeProjectId ? '#0ea5e9' : 'rgba(15,23,42,0.6)'} strokeWidth={project.id === activeProjectId ? 2 : 1} />
+              <text x={x} y={y - circleRadius - 4} fontSize="11" textAnchor="middle" fill="rgba(226,232,240,0.95)">
+                {project.id}
+              </text>
+              <title>{`${project.projectName} · Impacto ${(impact * 100).toFixed(0)}% · Horizonte ${months} meses`}</title>
+            </g>
+          )
+        })}
+
+        <text x={padding.left + innerWidth / 2} y={height - 6} fontSize="12" textAnchor="middle" fill="rgba(226,232,240,0.9)">Horizonte (meses)</text>
+        <text x={12} y={padding.top + innerHeight / 2} fontSize="12" textAnchor="middle" fill="rgba(226,232,240,0.9)" transform={`rotate(-90 12 ${padding.top + innerHeight / 2})`}>
+          Impacto normalizado
+        </text>
+      </svg>
+    )
+  }, [impactTimeline, timelineSummary, activeProjectId, setActiveProjectId])
 
   const summary = useMemo(() => {
     if (!filteredProjects.length) return { avg: 0, programs: 0 }
@@ -908,6 +1040,54 @@ export default function ProjectPortfolio() {
       <div style={{ fontSize: 24, fontWeight: 700 }}>{summary.programs}</div>
     </div>
   </section>
+
+      <section className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontWeight: 600 }}>Impacto vs horizonte</div>
+          <div style={{ display: 'flex', gap: 8, fontSize: 11, opacity: 0.85, flexWrap: 'wrap' }}>
+            {[
+              { type: 'FO', color: '#3b82f6' },
+              { type: 'FA', color: '#8b5cf6' },
+              { type: 'DO', color: '#ef4444' },
+              { type: 'DA', color: '#f97316' },
+            ].map((entry) => (
+              <span key={entry.type} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: entry.color }} />
+                {entry.type}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ flex: '1 1 320px', minWidth: 280 }}>{renderTimelineScatter()}</div>
+          <div style={{ flex: '0 0 220px', minWidth: 200, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 13, opacity: 0.8 }}>
+              Cruce 2x2 considerando impacto ≥ {(timelineSummary.impactThreshold * 100).toFixed(0)}% y horizontes ≤ {timelineSummary.horizonThreshold} meses.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(80px, 1fr))', gap: 8 }}>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(22,163,74,0.12)' }}>
+                <div style={{ fontSize: 11, opacity: 0.75 }}>Impacto alto · Corto plazo</div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{timelineSummary.buckets.highShort}</div>
+              </div>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(250,204,21,0.35)', background: 'rgba(250,204,21,0.12)' }}>
+                <div style={{ fontSize: 11, opacity: 0.75 }}>Impacto alto · Largo plazo</div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{timelineSummary.buckets.highLong}</div>
+              </div>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(148,163,184,0.35)', background: 'rgba(148,163,184,0.12)' }}>
+                <div style={{ fontSize: 11, opacity: 0.75 }}>Impacto moderado · Corto</div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{timelineSummary.buckets.lowShort}</div>
+              </div>
+              <div style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(148,163,184,0.35)', background: 'rgba(148,163,184,0.08)' }}>
+                <div style={{ fontSize: 11, opacity: 0.75 }}>Impacto moderado · Largo</div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{timelineSummary.buckets.lowLong}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              Usa el gráfico para decidir qué acelerar: prioriza los puntos azules/naranjas en el cuadrante superior izquierdo para victorias rápidas.
+            </div>
+          </div>
+        </div>
+      </section>
 
       {riskCoverage.rows.length > 0 && (
         <section className="card" style={{ marginBottom: 16 }}>
