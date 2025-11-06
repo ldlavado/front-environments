@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
 
 // Simple 2x2 DOFA matrix visualization
 // Props:
@@ -51,6 +52,7 @@ export default function DofaMatrix({ data }) {
   })
   const fileRef = useRef(null)
   const matrixRef = useRef(null)
+  const [showInfo, setShowInfo] = useState(false)
 
   // Load from public/dofa.json if no external data is passed
   useEffect(() => {
@@ -242,6 +244,34 @@ export default function DofaMatrix({ data }) {
     }
   }, [d, getPondMEFI, getPondMEFE])
 
+  const infoSections = useMemo(() => ([
+    {
+      title: 'Cómo se calculan los puntajes',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>Cuando un ID de la matriz DOFA coincide con un factor de MEFI (interno) o MEFE (externo) se muestra su ponderado como <code>pond</code>.</li>
+          <li>El ponderado de cada factor proviene de MEFI/MEFE y se obtiene multiplicando su <strong>peso</strong> por la <strong>calificación</strong>.</li>
+          <li>El <strong>score</strong> de las estrategias FO, FA, DO y DA suma los ponderados de los factores implicados en el cruce.</li>
+          <li>Si todavía no has diligenciado MEFI/MEFE los valores aparecerán en 0 y se actualizarán en cuanto guardes esas matrices.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Acrónimos y referencias',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>DOFA</strong>: Debilidades, Oportunidades, Fortalezas, Amenazas.</li>
+          <li><strong>MEFI</strong>: Matriz de Evaluación de Factores Internos (Fortalezas y Debilidades).</li>
+          <li><strong>MEFE</strong>: Matriz de Evaluación de Factores Externos (Oportunidades y Amenazas).</li>
+          <li><strong>FO</strong>: Estrategias que usan Fortalezas para aprovechar Oportunidades.</li>
+          <li><strong>FA</strong>: Estrategias que usan Fortalezas para enfrentar Amenazas.</li>
+          <li><strong>DO</strong>: Estrategias que reducen Debilidades aprovechando Oportunidades.</li>
+          <li><strong>DA</strong>: Estrategias que disminuyen el impacto de Amenazas sobre Debilidades.</li>
+        </ul>
+      ),
+    },
+  ]), [])
+
   const [showFO, setShowFO] = useState(false)
   const [showFA, setShowFA] = useState(false)
   const [showDO, setShowDO] = useState(false)
@@ -324,7 +354,10 @@ export default function DofaMatrix({ data }) {
 
   return (
     <div ref={matrixRef}>
-      <h2 style={{ margin: '12px 0 8px' }}>Matriz DOFA</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <h2 style={{ margin: '12px 0 8px' }}>Matriz DOFA</h2>
+        <InfoTrigger onClick={() => setShowInfo(true)} label="Guía y acrónimos" />
+      </div>
       <div style={{ ...styles.subtitle }}>{d.descripcion}</div>
 
       {/* Controls */}
@@ -429,6 +462,12 @@ export default function DofaMatrix({ data }) {
           </section>
         </div>
       </div>
+      <MatrixInfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Guía de la Matriz DOFA"
+        sections={infoSections}
+      />
     </div>
   )
 }

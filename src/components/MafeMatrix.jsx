@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
 
 const MAFE_DATA_VERSION = '2024-10-05'
 
@@ -32,6 +33,7 @@ export default function MafeMatrix({ data }) {
   })
   const fileRef = useRef(null)
   const matrixRef = useRef(null)
+  const [showInfo, setShowInfo] = useState(false)
 
   // load from public
   useEffect(() => {
@@ -100,6 +102,34 @@ export default function MafeMatrix({ data }) {
     { key: 'DO', title: 'DO (Debilidades x Oportunidades)' },
     { key: 'FA', title: 'FA (Fortalezas x Amenazas)' },
     { key: 'DA', title: 'DA (Debilidades x Amenazas)' },
+  ]), [])
+
+  const infoSections = useMemo(() => ([
+    {
+      title: 'Cómo se calculan los puntajes',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>El <strong>score</strong> de cada estrategia suma los ponderados de los factores internos (MEFI) y externos (MEFE) referenciados en el cruce.</li>
+          <li>Los ponderados provienen de multiplicar <strong>peso × calificación</strong> dentro de las matrices MEFI y MEFE.</li>
+          <li>Si un identificador no existe en MEFI/MEFE su aporte al score será 0 hasta que se registre.</li>
+          <li>La prioridad sugerida surge de ordenar las estrategias por su score de mayor a menor.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Acrónimos y referencias',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>MAFE</strong>: Matriz de Formulación de Estrategias.</li>
+          <li><strong>FO</strong>: Fortalezas con Oportunidades.</li>
+          <li><strong>DO</strong>: Debilidades con Oportunidades.</li>
+          <li><strong>FA</strong>: Fortalezas con Amenazas.</li>
+          <li><strong>DA</strong>: Debilidades con Amenazas.</li>
+          <li><strong>MEFI</strong>: Matriz de Evaluación de Factores Internos.</li>
+          <li><strong>MEFE</strong>: Matriz de Evaluación de Factores Externos.</li>
+        </ul>
+      ),
+    },
   ]), [])
 
   const styles = {
@@ -230,7 +260,10 @@ export default function MafeMatrix({ data }) {
   return (
     <>
     <div ref={matrixRef}>
-      <h2 style={{ margin: '12px 0 8px' }}>Matriz MAFE</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <h2 style={{ margin: '12px 0 8px' }}>Matriz MAFE</h2>
+        <InfoTrigger onClick={() => setShowInfo(true)} label="Guía y acrónimos" />
+      </div>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
       <div style={{ display: 'flex', gap: 8, margin: '8px 0 14px' }} data-export-ignore="true">
@@ -287,6 +320,12 @@ export default function MafeMatrix({ data }) {
         })}
       </div>
     </div>
+    <MatrixInfoModal
+      open={showInfo}
+      onClose={() => setShowInfo(false)}
+      title="Guía de la Matriz MAFE"
+      sections={infoSections}
+    />
   </>
   )
 }

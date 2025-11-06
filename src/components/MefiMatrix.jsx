@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
 
 export default function MefiMatrix({ data }) {
   const defaultData = useMemo(() => ({
@@ -36,6 +37,7 @@ export default function MefiMatrix({ data }) {
   const [sumPonderado, setSumPonderado] = useState(0)
   const fileRef = useRef(null)
   const matrixRef = useRef(null)
+  const [showInfo, setShowInfo] = useState(false)
 
   // Load from public/mefi.json if no external data is passed
   useEffect(() => {
@@ -164,6 +166,34 @@ export default function MefiMatrix({ data }) {
     }
   }
 
+  const infoSections = useMemo(() => ([
+    {
+      title: 'Cómo se calculan los puntajes',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>Cada factor interno asigna un <strong>peso</strong> (0 a 1) según su importancia relativa.</li>
+          <li>La <strong>calificación</strong> valora la respuesta actual: 1 = muy débil, 4 = muy fuerte.</li>
+          <li>El <strong>ponderado</strong> resulta de multiplicar peso × calificación y muestra la contribución del factor.</li>
+          <li>El total ponderado es la suma de todos los ponderados y permite contrastar la situación interna.</li>
+          <li>Para que la matriz sea consistente, la suma de pesos debe acercarse a 1.0.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Acrónimos y campos clave',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>MEFI</strong>: Matriz de Evaluación de Factores Internos.</li>
+          <li><strong>Fortaleza</strong>: Capacidad interna que aporta ventaja.</li>
+          <li><strong>Debilidad</strong>: Aspecto interno que limita el desempeño.</li>
+          <li><strong>Peso</strong>: Importancia relativa del factor (0 a 1, suma total ≈ 1).</li>
+          <li><strong>Calificación</strong>: Evaluación del desempeño (1 a 4).</li>
+          <li><strong>Evidencia</strong>: Datos o referencias que justifican la calificación.</li>
+        </ul>
+      ),
+    },
+  ]), [])
+
   const handleExportPng = useCallback(async () => {
     try {
       await downloadElementAsPng(matrixRef.current, 'matriz_mefi.png')
@@ -201,7 +231,10 @@ export default function MefiMatrix({ data }) {
 
   return (
     <div>
-      <h2 style={{ margin: '12px 0 8px' }}>Matriz MEFI</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <h2 style={{ margin: '12px 0 8px' }}>Matriz MEFI</h2>
+        <InfoTrigger onClick={() => setShowInfo(true)} label="Guía y acrónimos" />
+      </div>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
       <div style={{ ...styles.controls }} data-export-ignore="true">
@@ -290,6 +323,12 @@ export default function MefiMatrix({ data }) {
           Nota: La suma de pesos debe aproximar 1.0. El total ponderado es guía e idealmente coincide con "total" del JSON ({typeof d.total === 'number' ? d.total.toFixed(2) : 'N/A'}).
         </div>
       </div>
+      <MatrixInfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Guía de la Matriz MEFI"
+        sections={infoSections}
+      />
     </div>
   )
 }

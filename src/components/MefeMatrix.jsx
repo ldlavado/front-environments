@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
 
 export default function MefeMatrix({ data }) {
   const defaultData = useMemo(() => ({
@@ -36,6 +37,7 @@ export default function MefeMatrix({ data }) {
   const [sumPonderado, setSumPonderado] = useState(0)
   const fileRef = useRef(null)
   const matrixRef = useRef(null)
+  const [showInfo, setShowInfo] = useState(false)
 
   // Load from public/mefe.json if no external data is passed
   useEffect(() => {
@@ -164,6 +166,32 @@ export default function MefeMatrix({ data }) {
     }
   }
 
+  const infoSections = useMemo(() => ([
+    {
+      title: 'Cómo se calculan los puntajes',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>Cada fila tiene un <strong>peso</strong> (importancia relativa) y una <strong>calificación</strong> (respuesta actual).</li>
+          <li>El <strong>ponderado</strong> se calcula multiplicando peso × calificación y resume el aporte del factor.</li>
+          <li>El total ponderado al final de la tabla es la suma de todos los ponderados y sirve como referencia del desempeño externo.</li>
+          <li>El peso de todos los factores debe aproximar 1.0 para mantener la coherencia de la escala.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Acrónimos y campos clave',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>MEFE</strong>: Matriz de Evaluación de Factores Externos.</li>
+          <li><strong>Oportunidad</strong>: Factor externo positivo que puede aprovechar la organización.</li>
+          <li><strong>Amenaza</strong>: Factor externo que puede afectar negativamente.</li>
+          <li><strong>Peso</strong>: Valor entre 0 y 1 que representa la participación relativa del factor (la suma debe ser 1).</li>
+          <li><strong>Calificación</strong>: Respuesta de la organización ante el factor (1 = pobre, 4 = superior).</li>
+        </ul>
+      ),
+    },
+  ]), [])
+
   const handleExportPng = useCallback(async () => {
     try {
       await downloadElementAsPng(matrixRef.current, 'matriz_mefe.png')
@@ -201,7 +229,10 @@ export default function MefeMatrix({ data }) {
 
   return (
     <div>
-      <h2 style={{ margin: '12px 0 8px' }}>Matriz MEFE</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <h2 style={{ margin: '12px 0 8px' }}>Matriz MEFE</h2>
+        <InfoTrigger onClick={() => setShowInfo(true)} label="Guía y acrónimos" />
+      </div>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
       <div style={{ ...styles.controls }} data-export-ignore="true">
@@ -289,6 +320,12 @@ export default function MefeMatrix({ data }) {
           Nota: La suma de pesos debe aproximar 1.0. El total ponderado es guía e idealmente coincide con "total" del JSON ({typeof d.total === 'number' ? d.total.toFixed(2) : 'N/A'}).
         </div>
       </div>
+      <MatrixInfoModal
+        open={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Guía de la Matriz MEFE"
+        sections={infoSections}
+      />
     </div>
   )
 }

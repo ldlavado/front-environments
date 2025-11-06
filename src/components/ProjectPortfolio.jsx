@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
 
 const PROGRAM_RULES = [
   { id: 'digital', label: 'Transformación digital & datos', keywords: ['dato', 'data', 'cloud', 'iot', 'interoperabilidad', 'analítica', 'sensores', 'automat', 'devops', 'ia'] },
@@ -142,6 +143,7 @@ export default function ProjectPortfolio() {
   const [quickAnswer, setQuickAnswer] = useState(null)
   const [mafeBias, setMafeBias] = useState(0.3)
   const [expandedPrograms, setExpandedPrograms] = useState(() => [])
+  const [showGlossary, setShowGlossary] = useState(false)
   const projectRefs = useRef({})
   const themeTokens = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -157,6 +159,45 @@ export default function ProjectPortfolio() {
     }
   }, [])
   const expandedSet = useMemo(() => new Set(expandedPrograms), [expandedPrograms])
+  const glossarySections = useMemo(() => ([
+    {
+      title: 'Tecnologías y prácticas',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>IoT</strong>: Internet de las Cosas; integración de sensores y dispositivos conectados.</li>
+          <li><strong>IA</strong>: Inteligencia Artificial usada para analítica avanzada y automatización.</li>
+          <li><strong>PdM</strong>: Mantenimiento Predictivo que anticipa fallas con datos e IA.</li>
+          <li><strong>DevOps</strong>: Cultura y prácticas que unen desarrollo y operaciones para desplegar más rápido.</li>
+          <li><strong>CI/CD</strong>: Integración y Despliegue Continuos que automatizan pruebas y releases.</li>
+          <li><strong>HA/DR</strong>: Alta Disponibilidad y Recuperación ante Desastres para servicios críticos.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Indicadores y métricas',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>SLA</strong>: Service Level Agreement; compromisos de disponibilidad y tiempos de respuesta.</li>
+          <li><strong>MTBF</strong>: Mean Time Between Failures; promedio entre fallas de un activo.</li>
+          <li><strong>MTTR</strong>: Mean Time To Repair; tiempo promedio de recuperación tras una falla.</li>
+          <li><strong>KPI</strong>: Indicador clave de desempeño para medir avances del proyecto.</li>
+          <li><strong>NPS</strong>: Net Promoter Score; mide satisfacción o adopción de usuarios.</li>
+          <li><strong>TCO</strong>: Total Cost of Ownership; costo total de mantener una solución.</li>
+        </ul>
+      ),
+    },
+    {
+      title: 'Sistemas y dominios',
+      content: (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li><strong>O&M</strong>: Operación y Mantenimiento de activos o infraestructura.</li>
+          <li><strong>BMS</strong>: Building Management System; plataforma que integra equipos de edificios.</li>
+          <li><strong>ERP</strong>: Enterprise Resource Planning; sistema empresarial para recursos y finanzas.</li>
+          <li><strong>RAEE</strong>: Residuos de Aparatos Eléctricos y Electrónicos gestionados de forma segura.</li>
+        </ul>
+      ),
+    },
+  ]), [])
 
   useEffect(() => {
     let cancel = false
@@ -429,6 +470,32 @@ export default function ProjectPortfolio() {
   }
 
   const projects = useMemo(() => prioritizedStrategies.map((strategy, idx) => buildProject(strategy, idx)), [prioritizedStrategies])
+
+  const riskCoverage = useMemo(() => {
+    const amenazas = Array.isArray(dofa?.amenazas) ? dofa.amenazas : []
+    if (!amenazas.length) {
+      return { rows: [], uncovered: [], stats: { total: 0, covered: 0, uncovered: 0 } }
+    }
+    const relevantProjects = projects.filter((project) => project.type === 'DO' || project.type === 'DA')
+    const rows = amenazas.map((amenaza) => {
+      const covering = relevantProjects.filter((proj) => (proj.sourceExternalIds || []).includes(amenaza.id))
+      return {
+        amenaza,
+        coveredCount: covering.length,
+        projects: covering,
+      }
+    })
+    const covered = rows.filter((row) => row.coveredCount > 0)
+    return {
+      rows,
+      uncovered: rows.filter((row) => row.coveredCount === 0),
+      stats: {
+        total: amenazas.length,
+        covered: covered.length,
+        uncovered: Math.max(0, amenazas.length - covered.length),
+      },
+    }
+  }, [dofa, projects])
 
   const programOptions = useMemo(() => {
     const map = new Map(PROGRAM_RULES.map((p) => [p.id, p]))
@@ -842,6 +909,104 @@ export default function ProjectPortfolio() {
     </div>
   </section>
 
+      {riskCoverage.rows.length > 0 && (
+        <section className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontWeight: 600 }}>Mapa rápido de riesgos (Amenazas DOFA)</div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              {riskCoverage.stats.covered} cubiertas · {riskCoverage.stats.uncovered} sin cobertura
+            </div>
+          </div>
+          {riskCoverage.uncovered.length > 0 && (
+            <div style={{ fontSize: 13, marginBottom: 10 }}>
+              <strong>Riesgos sin mitigación:</strong>{' '}
+              {riskCoverage.uncovered.map((row, idx) => (
+                <span key={row.amenaza.id} style={{ marginRight: 8 }}>
+                  {row.amenaza.id}
+                  {idx < riskCoverage.uncovered.length - 1 ? ' · ' : ''}
+                </span>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {riskCoverage.rows.map((row) => {
+              const projectsPreview = row.projects.slice(0, 3)
+              const remaining = row.projects.length - projectsPreview.length
+              return (
+                <div
+                  key={row.amenaza.id}
+                  style={{
+                    border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`,
+                    borderRadius: 8,
+                    padding: 10,
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ flex: '1 1 260px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'rgba(248,113,113,0.18)', marginRight: 8 }}>
+                      {row.amenaza.id}
+                    </span>
+                    <span style={{ fontSize: 13 }}>
+                      {row.amenaza.texto || row.amenaza.nombre || row.amenaza.descripcion || ''}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {row.coveredCount > 0 ? (
+                      <>
+                        <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
+                          Cobertura {row.coveredCount}
+                        </span>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {projectsPreview.map((proj) => (
+                            <button
+                              key={`${row.amenaza.id}-${proj.id}`}
+                              onClick={() => setActiveProjectId(proj.id)}
+                              style={{
+                                border: '1px solid rgba(59,130,246,0.4)',
+                                borderRadius: 6,
+                                padding: '2px 6px',
+                                background: 'transparent',
+                                color: 'inherit',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                              }}
+                            >
+                              {proj.id}
+                            </button>
+                          ))}
+                          {remaining > 0 && (
+                            <span style={{ fontSize: 12, opacity: 0.75 }}>+{remaining}</span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>Sin proyectos DO/DA</span>
+                    )}
+                    <button
+                      onClick={() => focusMatrix('dofa', row.amenaza.id)}
+                      style={{
+                        border: '1px solid rgba(148,163,184,0.5)',
+                        borderRadius: 6,
+                        padding: '2px 6px',
+                        background: 'transparent',
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                      }}
+                    >
+                      Ver amenaza
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       <section className="card" style={{ marginBottom: 16 }}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Árbol de programas y proyectos</div>
         {programTree.length === 0 ? (
@@ -985,7 +1150,10 @@ export default function ProjectPortfolio() {
         </aside>
 
         <section className="card" style={{ flex: '1 1 480px' }}>
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>Backlog priorizado</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+            <div style={{ fontWeight: 600 }}>Backlog priorizado</div>
+            <InfoTrigger onClick={() => setShowGlossary(true)} label="Glosario de siglas" />
+          </div>
           {filteredProjects.length === 0 && <div>Sin resultados con los filtros seleccionados.</div>}
           <div style={{ display: 'grid', gap: 12 }}>
             {filteredProjects.map((project) => (
@@ -1017,7 +1185,15 @@ export default function ProjectPortfolio() {
                   <strong>Esfuerzo:</strong> {project.effort} · <strong>Horizonte:</strong> {project.horizon} · <strong>Score:</strong> {project.score}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6 }}>
-                  <strong>Efecto en matrices:</strong> {project.effects.join(' | ')}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <strong>Efecto en matrices:</strong>
+                    <InfoTrigger
+                      onClick={() => setShowGlossary(true)}
+                      label="Ver acrónimos"
+                      style={{ fontSize: 12, padding: '2px 8px', gap: 4 }}
+                    />
+                  </div>
+                  <div style={{ marginTop: 4 }}>{project.effects.join(' | ')}</div>
                   {project.effectLinks && project.effectLinks.length > 0 && (
                     <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {project.effectLinks.map((link, idx) => (
@@ -1060,6 +1236,12 @@ export default function ProjectPortfolio() {
           </div>
         </section>
       </div>
+      <MatrixInfoModal
+        open={showGlossary}
+        onClose={() => setShowGlossary(false)}
+        title="Glosario del portafolio"
+        sections={glossarySections}
+      />
     </div>
   )
 }
