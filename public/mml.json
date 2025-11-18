@@ -39,7 +39,9 @@
       ],
       "supuestos": ["Capacidad cloud contratada", "Soporte de ciberseguridad disponible"],
       "vinculos_portafolio": ["FO-01-P1", "FO-01-P2"],
-      "programas": ["digital", "operaciones"]
+      "programas": ["digital", "operaciones"],
+      "entornos": ["operaciones", "digital"],
+      "mafe": ["FO-01-P1", "FO-01-P2"]
     },
     {
       "id": "COMP-2",
@@ -50,7 +52,9 @@
       ],
       "supuestos": ["Patrón Zero-Trust aprobado", "Equipo de seguridad asignado"],
       "vinculos_portafolio": ["FA-02-P1"],
-      "programas": ["cumplimiento", "digital"]
+      "programas": ["cumplimiento", "digital"],
+      "entornos": ["cumplimiento", "digital"],
+      "mafe": ["FA-02-P1", "DA-02-P1"]
     },
     {
       "id": "COMP-3",
@@ -62,7 +66,9 @@
       ],
       "supuestos": ["Sensores instalados", "Reglas de validación mantenidas"],
       "vinculos_portafolio": ["FO-02-P1", "DO-02-P1", "DO-02-P2"],
-      "programas": ["operaciones", "sostenibilidad", "digital"]
+      "programas": ["operaciones", "sostenibilidad", "digital"],
+      "entornos": ["operaciones", "sostenibilidad", "digital"],
+      "mafe": ["FO-02-P1", "DO-02-P1", "DO-02-P2"]
     },
     {
       "id": "COMP-4",
@@ -73,7 +79,9 @@
       ],
       "supuestos": ["Disponibilidad de cuadrillas", "Patrocinio gerencial"],
       "vinculos_portafolio": ["DO-01-P1", "DA-01-P1", "DA-01-P2"],
-      "programas": ["cambio", "operaciones"]
+      "programas": ["cambio", "operaciones"],
+      "entornos": ["cambio", "operaciones"],
+      "mafe": ["DO-01-P1", "DA-01-P1", "DA-01-P2"]
     },
     {
       "id": "COMP-5",
@@ -85,7 +93,9 @@
       ],
       "supuestos": ["Visión financiera alineada", "Disponibilidad de datos de costos"],
       "vinculos_portafolio": ["FA-01-P1", "DA-02-P1", "DO-02-P2"],
-      "programas": ["cumplimiento", "operaciones", "cambio"]
+      "programas": ["cumplimiento", "operaciones", "cambio"],
+      "entornos": ["cumplimiento", "operaciones"],
+      "mafe": ["FA-01-P1", "DA-02-P1", "DO-02-P2"]
     }
   ],
   "actividades": [
@@ -228,6 +238,29 @@
           "id": "S3-C2",
           "titulo": "Eficiencia energética y costos",
           "actividades": ["Optimización de consumo", "Monitoreo MTBF/MTTR on-prem", "Casos TCO y payback"]
+        }
+      ]
+    },
+    {
+      "id": "SOL-4",
+      "nombre": "Camino D: DRaaS gestionado con SLA",
+      "fin": "Continuidad ante desastre con activación bajo demanda y SLA gestionado.",
+      "proposito": "Reducir RTO/RPO sin ampliar CAPEX, asegurando trazabilidad y portabilidad.",
+      "componentes": [
+        {
+          "id": "S4-C1",
+          "titulo": "Orquestación y failover DRaaS",
+          "actividades": ["Catálogo de runbooks DRaaS", "Pruebas de conmutación asistidas", "Monitoreo de health checks y playbooks"]
+        },
+        {
+          "id": "S4-C2",
+          "titulo": "Cumplimiento y trazabilidad DRaaS",
+          "actividades": ["Trazabilidad de auditoría (logs/APIs)", "Controles Zero-Trust en túneles y backup", "Bitácora de ejercicios DR"]
+        },
+        {
+          "id": "S4-C3",
+          "titulo": "Optimización de costo y portabilidad",
+          "actividades": ["Políticas de snapshots/retención", "Alertas de costo y etiquetado FinOps", "Plantillas IaC multi-cloud"]
         }
       ]
     }
