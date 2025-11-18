@@ -1,57 +1,79 @@
 {
   "matriz": "MPC",
-  "descripcion": "Matriz de Perfil Competitivo",
+  "descripcion": "Matriz de Perfil Competitivo para el proyecto 'Arquitectura HA/DR multi-región': compara caminos de solución y su ajuste.",
   "competidores": [
-    { "id": "C-01", "nombre": "Proveedor A (Suite PdM)" },
-    { "id": "C-02", "nombre": "Proveedor B (IoT + BI)" },
-    { "id": "C-03", "nombre": "Proyecto interno" }
+    { "id": "C-01", "nombre": "Camino A: Nube multi-región gestionada" },
+    { "id": "C-02", "nombre": "Camino B: Híbrido edge + respaldo nube" },
+    { "id": "C-03", "nombre": "Camino C: On-prem activo-activo" },
+    { "id": "C-04", "nombre": "Camino D: DRaaS gestionado con SLA" }
   ],
   "escala": {
     "peso": "0.0–1.0 (suma 1.0)",
     "calificacion": "1–4",
-    "nota": "Total ponderado por competidor = sum(peso_i * calif_i)"
+    "nota": "1=Deficiente, 2=Regular, 3=Bueno, 4=Excelente. Total ponderado por competidor = sum(peso_i * calif_i)."
   },
   "factores": [
     {
       "id": "MPC-01",
-      "nombre": "Interoperabilidad (APIs/SDKs)",
+      "nombre": "RTO/RPO y resiliencia probada",
+      "entorno": "operaciones",
+      "mafe": ["FO-01-P1"],
       "peso": 0.18,
-      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 2 }
+      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 4, "C-04": 3 }
     },
     {
       "id": "MPC-02",
-      "nombre": "Seguridad y cumplimiento",
-      "peso": 0.16,
-      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2 }
+      "nombre": "Coste total 3 años (CAPEX/OPEX)",
+      "entorno": "operaciones",
+      "mafe": ["FA-01-P1", "DO-02-P2"],
+      "peso": 0.15,
+      "calificaciones": { "C-01": 3, "C-02": 3, "C-03": 2, "C-04": 4 }
     },
     {
       "id": "MPC-03",
-      "nombre": "Coste total (TCO)",
+      "nombre": "Cumplimiento y trazabilidad (auditoría)",
+      "entorno": "cumplimiento",
+      "mafe": ["FA-02-P1", "DA-02-P1"],
       "peso": 0.14,
-      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4 }
+      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 4, "C-04": 4 }
     },
     {
       "id": "MPC-04",
-      "nombre": "Soporte/servicio",
-      "peso": 0.18,
-      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2 }
+      "nombre": "Latencia / cercanía a site crítico",
+      "entorno": "operaciones",
+      "mafe": ["DO-01-P1"],
+      "peso": 0.12,
+      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 4, "C-04": 3 }
     },
     {
       "id": "MPC-05",
-      "nombre": "Escalabilidad",
-      "peso": 0.17,
-      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 2 }
+      "nombre": "Automatización y pruebas HA/DR",
+      "entorno": "digital",
+      "mafe": ["FO-01-P1"],
+      "peso": 0.14,
+      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2, "C-04": 4 }
     },
     {
       "id": "MPC-06",
-      "nombre": "Lock-in / portabilidad",
-      "peso": 0.17,
-      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4 }
+      "nombre": "Escalabilidad / elasticidad",
+      "entorno": "digital",
+      "mafe": ["FO-01-P2"],
+      "peso": 0.13,
+      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2, "C-04": 3 }
+    },
+    {
+      "id": "MPC-07",
+      "nombre": "Riesgo de lock-in y portabilidad",
+      "entorno": "digital",
+      "mafe": ["FA-02-P1"],
+      "peso": 0.14,
+      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4, "C-04": 3 }
     }
   ],
   "totales_ponderados": [
-    { "competidor": "C-01", "total": 3.03 },
-    { "competidor": "C-02", "total": 3.35 },
-    { "competidor": "C-03", "total": 2.62 }
+    { "competidor": "C-01", "total": 3.31 },
+    { "competidor": "C-02", "total": 3.26 },
+    { "competidor": "C-03", "total": 3.16 },
+    { "competidor": "C-04", "total": 3.43 }
   ]
 }

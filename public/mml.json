@@ -1,57 +1,235 @@
 {
   "matriz": "MML",
-  "descripcion": "Matriz de Marco Lógico (Fin, Propósito, Resultados/Componentes, Actividades, Indicadores, Medios de Verificación, Supuestos)",
+  "descripcion": "Matriz de Marco Lógico hilada con el portafolio FO/FA/DO/DA (ProjectPortfolio) y la guía del Taller rápido MML.",
+  "fuente": "Cruce de DOFA/MAFE/MPC y priorización de ProjectPortfolio (version 2024-10-05)",
   "fin": {
-    "enunciado": "Mejorar sostenibilidad operativa y energética en infraestructura HVAC",
+    "enunciado": "Infraestructura digital interoperable, resiliente y eficiente energéticamente, con cumplimiento sectorial y continuidad de servicio.",
     "indicadores": [
-      { "id": "FIN-1", "nombre": "Reducción de consumo energético (%)", "meta": "≥15% anual", "medio_verificacion": "Facturación y medidores IoT" }
+      { "id": "FIN-1", "nombre": "Disponibilidad de servicios críticos", "meta": "≥99.95% con conmutación HA/DR validada", "medio_verificacion": "Monitoreo IoT/IA + bitácora de pruebas HA/DR" },
+      { "id": "FIN-2", "nombre": "Eficiencia energética", "meta": "Ahorro ≥15% kWh anual y trazabilidad ESG", "medio_verificacion": "Datamart energía/confiabilidad y tableros ESG" },
+      { "id": "FIN-3", "nombre": "Cumplimiento normativo y auditorías", "meta": "0 hallazgos críticos y trámites on-time", "medio_verificacion": "Reportes de auditoría y PMO regulatoria" }
     ],
-    "supuestos": ["Estabilidad regulatoria y precios de energía"]
+    "supuestos": [
+      "Patrocinio ejecutivo y CAPEX/OPEX asegurado",
+      "Regulación y contratos de nube estables",
+      "Disponibilidad de aliados tecnológicos para integraciones"
+    ]
   },
   "proposito": {
-    "enunciado": "Reducir costos de mantenimiento y tiempos de inactividad mediante PdM",
+    "enunciado": "Portafolio priorizado FO/FA/DO/DA desplegado con adopción de usuarios y datos confiables para decisiones rápidas.",
     "indicadores": [
-      { "id": "PRO-1", "nombre": "Reducción costos de mantenimiento (%)", "meta": "≥20%", "medio_verificacion": "ERP/contabilidad" },
-      { "id": "PRO-2", "nombre": "MTBF (horas)", "meta": "+25%", "medio_verificacion": "CMMS/Sistema PdM" }
+      { "id": "PRO-1", "nombre": "Proyectos FO/DO en operación", "meta": "≥4 iniciativas críticas en producción", "medio_verificacion": "Tablero PMO del portafolio" },
+      { "id": "PRO-2", "nombre": "Cobertura de amenazas DO/DA", "meta": "≥80% de amenazas DOFA con proyecto asociado", "medio_verificacion": "Seguimiento DOFA + ProjectPortfolio" },
+      { "id": "PRO-3", "nombre": "Adopción y satisfacción (NPS)", "meta": "NPS/CSAT usuarios finales ≥4.3", "medio_verificacion": "Encuestas + telemetría de uso" },
+      { "id": "PRO-4", "nombre": "Reportes regulatorios y ESG", "meta": "Generación en <5 días mensuales", "medio_verificacion": "ETL/BI del datamart de confiabilidad y energía" }
     ],
-    "supuestos": ["Disponibilidad de datos operativos", "Adopción del personal de O&M"]
+    "supuestos": [
+      "Equipos de O&M con tiempo para pilotos",
+      "Datos operativos y financieros accesibles",
+      "Acompañamiento de gestión del cambio y comunicaciones"
+    ]
   },
   "componentes": [
     {
       "id": "COMP-1",
-      "resultado": "Plataforma IoT/IA operativa (ingesta, analítica, alertas)",
+      "resultado": "Arquitectura HA/DR interoperable y segura desplegada.",
       "indicadores": [
-        { "id": "RES-1", "nombre": "Exactitud de predicción de fallas (F1)", "meta": "≥0.80", "medio_verificacion": "Logs de model serving" }
+        { "id": "C1-I1", "nombre": "SLA crítico con conmutación automática", "meta": "≥99.95% uptime", "medio_verificacion": "Pruebas HA/DR trimestrales" },
+        { "id": "C1-I2", "nombre": "Integraciones clave migradas a APIs homologadas", "meta": "≥8 integraciones prioritarias", "medio_verificacion": "Catálogo de APIs y monitoreo" }
       ],
-      "supuestos": ["SLA de nube y ciberseguridad vigentes"]
+      "supuestos": ["Capacidad cloud contratada", "Soporte de ciberseguridad disponible"],
+      "vinculos_portafolio": ["FO-01-P1", "FO-01-P2"],
+      "programas": ["digital", "operaciones"]
     },
     {
       "id": "COMP-2",
-      "resultado": "Datamart de confiabilidad y energía (MTBF/MTTR/consumo)",
+      "resultado": "Cinturón de cumplimiento y trazabilidad Zero-Trust para datos y APIs.",
       "indicadores": [
-        { "id": "RES-2", "nombre": "Cobertura de telemetría (%)", "meta": "≥90%", "medio_verificacion": "Inventario y monitoreo" }
+        { "id": "C2-I1", "nombre": "Hallazgos críticos de seguridad/compliance", "meta": "0", "medio_verificacion": "Reportes de auditoría" },
+        { "id": "C2-I2", "nombre": "Tiempo de respuesta a auditorías", "meta": "<5 días", "medio_verificacion": "Bitácora PMO y SIEM" }
       ],
-      "supuestos": ["Calidad de datos sostenida"]
+      "supuestos": ["Patrón Zero-Trust aprobado", "Equipo de seguridad asignado"],
+      "vinculos_portafolio": ["FA-02-P1"],
+      "programas": ["cumplimiento", "digital"]
+    },
+    {
+      "id": "COMP-3",
+      "resultado": "Datamart de confiabilidad y energía con calidad de datos automatizada.",
+      "indicadores": [
+        { "id": "C3-I1", "nombre": "Cobertura de telemetría útil", "meta": "≥90% activos priorizados", "medio_verificacion": "Inventario + monitoreo" },
+        { "id": "C3-I2", "nombre": "Señales validadas", "meta": ">=95% libres de gaps", "medio_verificacion": "Motor de calidad de datos" },
+        { "id": "C3-I3", "nombre": "KPIs MTBF/MTTR y kWh publicados", "meta": "Tableros actualizados diario", "medio_verificacion": "BI y catálogo de métricas" }
+      ],
+      "supuestos": ["Sensores instalados", "Reglas de validación mantenidas"],
+      "vinculos_portafolio": ["FO-02-P1", "DO-02-P1", "DO-02-P2"],
+      "programas": ["operaciones", "sostenibilidad", "digital"]
+    },
+    {
+      "id": "COMP-4",
+      "resultado": "Adopción y gestión del cambio con quick wins operativos.",
+      "indicadores": [
+        { "id": "C4-I1", "nombre": "Usuarios formados y activos", "meta": ">=150 personas y ≥70% uso", "medio_verificacion": "LMS + analítica de uso" },
+        { "id": "C4-I2", "nombre": "Pilotos quick wins OT", "meta": "≥3 pilotos con ROI <6 meses", "medio_verificacion": "Planes de piloto y ROI" }
+      ],
+      "supuestos": ["Disponibilidad de cuadrillas", "Patrocinio gerencial"],
+      "vinculos_portafolio": ["DO-01-P1", "DA-01-P1", "DA-01-P2"],
+      "programas": ["cambio", "operaciones"]
+    },
+    {
+      "id": "COMP-5",
+      "resultado": "Casos de negocio y PMO ágil que libera presupuesto y asegura hitos regulatorios.",
+      "indicadores": [
+        { "id": "C5-I1", "nombre": "CAPEX/OPEX liberado vs plan", "meta": "≥80% del plan anual", "medio_verificacion": "Tablero financiero y aprobaciones" },
+        { "id": "C5-I2", "nombre": "Hitos regulatorios on-time", "meta": "≥90%", "medio_verificacion": "Bitácora PMO regulatoria" },
+        { "id": "C5-I3", "nombre": "Casos TCO aprobados", "meta": "≥3 en 12 meses", "medio_verificacion": "Actas de comité" }
+      ],
+      "supuestos": ["Visión financiera alineada", "Disponibilidad de datos de costos"],
+      "vinculos_portafolio": ["FA-01-P1", "DA-02-P1", "DO-02-P2"],
+      "programas": ["cumplimiento", "operaciones", "cambio"]
     }
   ],
   "actividades": [
     {
       "id": "ACT-1",
-      "descripcion": "Despliegue de sensores críticos y conectividad segura",
-      "insumos": ["Sensores, gateway, nube"],
-      "supuestos": ["Permisos de intervención y CAPEX disponible"]
+      "descripcion": "Diseñar y ejecutar arquitectura HA/DR multi-región con runbooks y pruebas de resiliencia.",
+      "componente": "COMP-1",
+      "insumos": ["IaC y topología HA/DR", "Ambientes de prueba", "Automatización de failover"],
+      "supuestos": ["SLA cloud contratados", "Ventanas de prueba acordadas"],
+      "medios_verificacion": ["Reportes de pruebas HA/DR", "Monitoreo de uptime"],
+      "vinculos_portafolio": ["FO-01-P1"]
     },
     {
       "id": "ACT-2",
-      "descripcion": "Entrenamiento de modelos PdM y pipeline MLOps",
-      "insumos": ["Datos históricos, ETL/feature store, orquestación"],
-      "supuestos": ["Históricos suficientes y etiquetados"]
+      "descripcion": "Kit de interoperabilidad sectorial y gateway seguro (APIs, conectores, manual MinTIC).",
+      "componente": "COMP-1",
+      "insumos": ["Gateway/API manager", "Plantillas SDK/BPMN", "Catálogo de APIs homologadas"],
+      "supuestos": ["Contratos con terceros listos", "Equipos de integración disponibles"],
+      "medios_verificacion": ["APIs publicadas", "Integraciones certificadas"],
+      "vinculos_portafolio": ["FO-01-P2"]
     },
     {
       "id": "ACT-3",
-      "descripcion": "Onboarding y gestión del cambio",
-      "insumos": ["Manual de usuario, runbooks, talleres"],
-      "supuestos": ["Disponibilidad del personal y patrocinio gerencial"]
+      "descripcion": "Endurecer seguridad y trazabilidad con controles Zero-Trust y monitoreo SIEM/observabilidad.",
+      "componente": "COMP-2",
+      "insumos": ["Stack de seguridad", "Reglas de auditoría", "Playbooks de respuesta"],
+      "supuestos": ["Equipos de seguridad asignados", "Presupuesto para licencias"],
+      "medios_verificacion": ["Reportes de auditoría", "Alertas SIEM atendidas"],
+      "vinculos_portafolio": ["FA-02-P1"]
+    },
+    {
+      "id": "ACT-4",
+      "descripcion": "Motor de calidad de datos y feature store para señales de mantenimiento y energía.",
+      "componente": "COMP-3",
+      "insumos": ["Reglas de validación", "Pipelines ETL/ELT", "Feature store"],
+      "supuestos": ["Telemetría accesible", "Equipos de datos disponibles"],
+      "medios_verificacion": ["Alarmas por data incompleta", "Tablero de calidad"],
+      "vinculos_portafolio": ["DO-02-P1"]
+    },
+    {
+      "id": "ACT-5",
+      "descripcion": "Construir datamart de confiabilidad/energía y tableros ESG-financiero (TCO, payback).",
+      "componente": "COMP-3",
+      "insumos": ["Modelos de datos", "Conectores ERP/BMS", "Herramienta BI"],
+      "supuestos": ["Fuentes financieras habilitadas", "Gobernanza de datos"],
+      "medios_verificacion": ["Dashboards publicados", "Catálogo de métricas"],
+      "vinculos_portafolio": ["FO-02-P1", "DO-02-P2"]
+    },
+    {
+      "id": "ACT-6",
+      "descripcion": "Playbook de integración abierta y acompañamiento de desarrollo para adopción de APIs.",
+      "componente": "COMP-4",
+      "insumos": ["Guías y SDK", "Plantillas de procesos BPMN", "Soporte DevRel"],
+      "supuestos": ["Equipos de desarrollo asignados", "Patrocinio de líderes de proceso"],
+      "medios_verificacion": ["Procesos migrados", "Usuarios formados"],
+      "vinculos_portafolio": ["DO-01-P1"]
+    },
+    {
+      "id": "ACT-7",
+      "descripcion": "Academia digital y coaching en sitio para cuadrillas + quick wins OT con pilotos." ,
+      "componente": "COMP-4",
+      "insumos": ["LMS y talleres", "Runbooks y manuales", "Sensores/kit de piloto"],
+      "supuestos": ["Tiempo de operación disponible", "Patrocinio gerencial"],
+      "medios_verificacion": ["Horas de capacitación", "Pilotos completados"],
+      "vinculos_portafolio": ["DA-01-P1", "DA-01-P2"]
+    },
+    {
+      "id": "ACT-8",
+      "descripcion": "Casos TCO y tablero financiero para justificar inversión resiliente/energética.",
+      "componente": "COMP-5",
+      "insumos": ["Plantillas de caso de negocio", "Datos de costos", "Herramienta financiera"],
+      "supuestos": ["Datos contables disponibles", "Apoyo de finanzas"],
+      "medios_verificacion": ["Casos aprobados", "CAPEX liberado"],
+      "vinculos_portafolio": ["FA-01-P1", "DO-02-P2"]
+    },
+    {
+      "id": "ACT-9",
+      "descripcion": "PMO ligera y oficina de control normativo por fases para liberar presupuesto y trámites.",
+      "componente": "COMP-5",
+      "insumos": ["Calendario regulatorio", "Backlog de hitos", "Equipo PMO"],
+      "supuestos": ["Equipos jurídicos disponibles", "Patrocinio del sponsor"],
+      "medios_verificacion": ["Hitos cumplidos", "Actas de comité"],
+      "vinculos_portafolio": ["DA-02-P1"]
+    }
+  ],
+  "supuestos_globales": [
+    "Gobernanza de datos y ciberseguridad unificada para todos los proyectos",
+    "Cadena de suministro de sensores y gateways estable",
+    "Coordinación con terceros y reguladores sin retrasos mayores"
+  ],
+  "soluciones": [
+    {
+      "id": "SOL-1",
+      "nombre": "Camino A: Nube multi-región gestionada",
+      "fin": "Garantizar continuidad de servicio crítico con conmutación validada en múltiples regiones cloud.",
+      "proposito": "Desplegar arquitectura activo-activo con RTO/RPO < 5 min y APIs interoperables.",
+      "componentes": [
+        {
+          "id": "S1-C1",
+          "titulo": "Resiliencia HA/DR",
+          "actividades": ["Arquitectura HA/DR multi-región", "Pruebas trimestrales de conmutación", "Runbooks automatizados"]
+        },
+        {
+          "id": "S1-C2",
+          "titulo": "Interoperabilidad y APIs",
+          "actividades": ["Kit de interoperabilidad sectorial", "Conectores y SDK BPMN"]
+        }
+      ]
+    },
+    {
+      "id": "SOL-2",
+      "nombre": "Camino B: Híbrido edge + respaldo nube",
+      "fin": "Continuidad local con respaldo en nube para cargas críticas en sitio.",
+      "proposito": "Reducir latencia y asegurar respaldo en cloud ante fallas de sitio.",
+      "componentes": [
+        {
+          "id": "S2-C1",
+          "titulo": "Respaldo y sincronización edge-cloud",
+          "actividades": ["Cluster edge en sitio", "Sync incremental a nube", "Pruebas de failover parcial"]
+        },
+        {
+          "id": "S2-C2",
+          "titulo": "Gobierno y seguridad híbrida",
+          "actividades": ["Controles Zero-Trust", "Trazabilidad de auditoría", "Playbooks de respuesta"]
+        }
+      ]
+    },
+    {
+      "id": "SOL-3",
+      "nombre": "Camino C: On-prem activo-activo",
+      "fin": "Alta disponibilidad con dos sitios físicos sincronizados.",
+      "proposito": "Minimizar dependencia de nube manteniendo SLA en sitios on-prem.",
+      "componentes": [
+        {
+          "id": "S3-C1",
+          "titulo": "Clusters on-prem replicados",
+          "actividades": ["Storage y compute replicado", "Heartbeats y fencing", "Pruebas de site failover"]
+        },
+        {
+          "id": "S3-C2",
+          "titulo": "Eficiencia energética y costos",
+          "actividades": ["Optimización de consumo", "Monitoreo MTBF/MTTR on-prem", "Casos TCO y payback"]
+        }
+      ]
     }
   ]
 }

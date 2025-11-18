@@ -905,7 +905,7 @@ export default function ProjectPortfolio() {
         </div>
       )
     }
-    if (miniTab === 'programas' ) {
+    if (miniTab === 'programas') {
       return (
         <div>
           <div style={{ fontSize: 13, marginBottom: 8 }}>Programas con más proyectos priorizados.</div>

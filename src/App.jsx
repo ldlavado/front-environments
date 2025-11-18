@@ -57,6 +57,8 @@ function App() {
         { key: 'mefi', title: 'Matriz MEFI' },
         { key: 'mefe', title: 'Matriz MEFE' },
         { key: 'mafe', title: 'Matriz MAFE' },
+        { key: 'mpc', title: 'Matriz MPC' },
+        { key: 'mml', title: 'Matriz MML' },
         { key: 'portfolio', title: 'Portafolio proyectos' },
         { key: 'sim', title: 'Similitud' },
         { key: 'sankey', title: 'Sankey (texto)' },

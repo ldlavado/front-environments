@@ -128,13 +128,19 @@ export default function MpcMatrix({ data }) {
   }
 
   const sumPeso = useMemo(() => (d.factores || []).reduce((a,f)=> a + (Number(f.peso)||0), 0), [d])
+  const bestCandidate = useMemo(() => {
+    const entries = Object.entries(calcTotals || {})
+    if (!entries.length) return null
+    const [id, total] = entries.sort((a, b) => b[1] - a[1])[0]
+    return { id, total }
+  }, [calcTotals])
 
   return (
     <div>
       <h2 style={{ margin: '12px 0 8px' }}>Matriz MPC</h2>
       <div style={{ opacity: 0.8, marginBottom: 8 }}>{d.descripcion}</div>
 
-      <div style={{ ...styles.controls }} data-export-ignore="true">
+      <div style={{ ...styles.controls, flexWrap: 'wrap' }} data-export-ignore="true">
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={onFileChange} />
         <button onClick={pick} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Importar JSON</button>
         <button onClick={onExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
@@ -142,12 +148,25 @@ export default function MpcMatrix({ data }) {
         <button onClick={onReset} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
       </div>
 
+      <div className="card" style={{ marginBottom: 10 }}>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>Alternativas (soluciones)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(1, competitorIds.length)}, minmax(180px, 1fr))`, gap: 8 }}>
+          {(d.competidores || []).map((c) => (
+            <div key={c.id} style={{ padding: '8px 10px', border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, borderRadius: 8 }}>
+              <strong>{c.nombre}</strong>
+              {bestCandidate?.id === c.id ? <div style={{ marginTop: 4, color: '#16a34a', fontWeight: 600 }}>Candidato con mayor puntaje esperado</div> : null}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div ref={matrixRef}>
         <div className="card">
           <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Factor</th>
+              <th style={styles.th}>Variable (MPC)</th>
+              <th style={styles.th}>Entorno/MAFE</th>
               <th style={styles.th}>Peso</th>
               {competitorIds.map(cid => (
                 <th key={cid} style={styles.th}>Calif {competitorNames[cid] || cid}</th>
@@ -158,6 +177,10 @@ export default function MpcMatrix({ data }) {
             {(d.factores || []).map((f) => (
               <tr key={f.id}>
                 <td style={styles.td}>{f.nombre}</td>
+                <td style={styles.td}>
+                  {f.entorno ? <div><strong>Entorno:</strong> {f.entorno}</div> : null}
+                  {Array.isArray(f.mafe) && f.mafe.length ? <div style={{ marginTop: 4, fontSize: 12, opacity: 0.9 }}><strong>MAFE:</strong> {f.mafe.join(' · ')}</div> : null}
+                </td>
                 <td style={styles.td}>
                   <input type="number" min={0} max={1} step={0.01} value={(Number(f.peso) || 0).toString()} onChange={(e)=>updatePeso(f.id, e.target.value)} style={{ width: 80 }} />
                 </td>
@@ -172,6 +195,7 @@ export default function MpcMatrix({ data }) {
           <tfoot>
             <tr>
               <td style={styles.td}><strong>Totales</strong></td>
+              <td style={styles.td}></td>
               <td style={styles.td}>
                 <strong>{sumPeso.toFixed(2)}</strong>
                 {Math.abs(sumPeso - 1) > 0.01 && (
@@ -194,7 +218,7 @@ export default function MpcMatrix({ data }) {
         </div>
 
         <div style={{ marginTop: 10, opacity: 0.8 }}>
-          Nota: La suma de pesos debe aproximar 1.0. Los totales ponderados por competidor se recalculan desde los factores.
+          Nota: La suma de pesos debe aproximar 1.0. Los totales ponderados por competidor se recalculan desde los factores. Usa los campos de Entorno/MAFE para justificar las variables frente a los entornos y estrategias.
         </div>
       </div>
     </div>
