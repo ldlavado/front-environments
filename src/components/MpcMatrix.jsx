@@ -134,6 +134,24 @@ export default function MpcMatrix({ data }) {
     const [id, total] = entries.sort((a, b) => b[1] - a[1])[0]
     return { id, total }
   }, [calcTotals])
+  const normalizeWeights = () => {
+    setD(prev => {
+      const total = (prev.factores || []).reduce((acc, f) => acc + (Number(f.peso) || 0), 0)
+      if (!total) return prev
+      return {
+        ...prev,
+        factores: (prev.factores || []).map((f) => ({
+          ...f,
+          peso: Number(((Number(f.peso) || 0) / total).toFixed(3))
+        }))
+      }
+    })
+  }
+  const getPonderado = (f, cid) => {
+    const peso = Number(f.peso) || 0
+    const cal = Number((f.calificaciones || {})[cid]) || 0
+    return peso * cal
+  }
 
   return (
     <div>
@@ -146,6 +164,8 @@ export default function MpcMatrix({ data }) {
         <button onClick={onExport} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Exportar JSON</button>
         <button onClick={handleExportPng} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Guardar PNG</button>
         <button onClick={onReset} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Restaurar por defecto</button>
+        <button onClick={normalizeWeights} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>Normalizar pesos</button>
+        <button onClick={() => alert('MPC Paso a paso:\\n1) Lista competidores (alternativas).\\n2) Define factores críticos.\\n3) Asigna pesos (suman 1).\\n4) Califica 1=debilidad ... 4=mayor fuerza.\\n5) Ponderado = peso * calificación.\\n6) Total ponderado mayor = opción recomendada.')} style={{ border: `1px solid ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>¿Cómo funciona?</button>
       </div>
 
       <div className="card" style={{ marginBottom: 10 }}>
@@ -157,6 +177,14 @@ export default function MpcMatrix({ data }) {
               {bestCandidate?.id === c.id ? <div style={{ marginTop: 4, color: '#16a34a', fontWeight: 600 }}>Candidato con mayor puntaje esperado</div> : null}
             </div>
           ))}
+          <div style={{ padding: '8px 10px', border: `1px dashed ${getComputedStyle(document.documentElement).getPropertyValue('--border') || '#2a2f45'}`, borderRadius: 8, color: '#94a3b8' }}>
+            <div style={{ fontWeight: 700 }}>Tips rápidos</div>
+            <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+              <li>Calificaciones: 1=debilidad, 2=menor debilidad, 3=menor fuerza, 4=mayor fuerza.</li>
+              <li>Pesos deben sumar 1. Usa “Normalizar pesos”.</li>
+              <li>Ponderado = peso × calificación (se muestra en la fila).</li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -165,12 +193,18 @@ export default function MpcMatrix({ data }) {
           <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Variable (MPC)</th>
-              <th style={styles.th}>Entorno/MAFE</th>
-              <th style={styles.th}>Peso</th>
+              <th style={styles.th} rowSpan={2}>Variable (MPC)</th>
+              <th style={styles.th} rowSpan={2}>Entorno</th>
+              <th style={styles.th} rowSpan={2}>Peso</th>
               {competitorIds.map(cid => (
-                <th key={cid} style={styles.th}>Calif {competitorNames[cid] || cid}</th>
+                <th key={`${cid}-cal`} style={styles.th} colSpan={2}>{competitorNames[cid] || cid}</th>
               ))}
+            </tr>
+            <tr>
+              {competitorIds.flatMap(cid => ([
+                <th key={`${cid}-c`} style={styles.th}>Calif</th>,
+                <th key={`${cid}-p`} style={styles.th}>Ponderado</th>,
+              ]))}
             </tr>
           </thead>
           <tbody>
@@ -185,9 +219,14 @@ export default function MpcMatrix({ data }) {
                   <input type="number" min={0} max={1} step={0.01} value={(Number(f.peso) || 0).toString()} onChange={(e)=>updatePeso(f.id, e.target.value)} style={{ width: 80 }} />
                 </td>
                 {competitorIds.map(cid => (
-                  <td key={cid} style={styles.td}>
+                  <React.Fragment key={cid}>
+                    <td style={styles.td}>
                     <input type="number" min={1} max={4} step={1} value={(Number((f.calificaciones||{})[cid]) || 0).toString()} onChange={(e)=>updateCal(f.id, cid, e.target.value)} style={{ width: 80 }} />
-                  </td>
+                    </td>
+                    <td style={styles.td}>
+                      <strong>{getPonderado(f, cid).toFixed(2)}</strong>
+                    </td>
+                  </React.Fragment>
                 ))}
               </tr>
             ))}
@@ -210,7 +249,7 @@ export default function MpcMatrix({ data }) {
                 )}
               </td>
               {competitorIds.map(cid => (
-                <td key={cid} style={styles.td}><strong>{(calcTotals[cid] || 0).toFixed(2)}</strong></td>
+                <td key={`${cid}-sum`} style={styles.td} colSpan={2}><strong>{(calcTotals[cid] || 0).toFixed(2)}</strong></td>
               ))}
             </tr>
           </tfoot>

@@ -19,6 +19,7 @@ import ExcelView from './components/ExcelView'
 import EnvironmentResilience from './components/EnvironmentResilience'
 import Navbar from './components/Navbar'
 import ProjectPortfolio from './components/ProjectPortfolio'
+import Trees from './components/Trees'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -62,6 +63,7 @@ function App() {
         { key: 'portfolio', title: 'Portafolio proyectos' },
         { key: 'sim', title: 'Similitud' },
         { key: 'sankey', title: 'Sankey (texto)' },
+        { key: 'trees', title: 'Árboles' },
       ]
     }
   ]), [])
@@ -124,6 +126,7 @@ function App() {
   {tab === 'mafe' && <MafeMatrix />}
   {tab === 'mpc' && <MpcMatrix />}
   {tab === 'mml' && <MmlMatrix />}
+  {tab === 'trees' && <Trees />}
   {tab === 'portfolio' && <ProjectPortfolio />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
       {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}

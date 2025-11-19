@@ -2,10 +2,22 @@
   "matriz": "MPC",
   "descripcion": "Matriz de Perfil Competitivo para el proyecto 'Arquitectura HA/DR multi-región': compara caminos de solución y su ajuste.",
   "competidores": [
-    { "id": "C-01", "nombre": "Camino A: Nube multi-región gestionada" },
-    { "id": "C-02", "nombre": "Camino B: Híbrido edge + respaldo nube" },
-    { "id": "C-03", "nombre": "Camino C: On-prem activo-activo" },
-    { "id": "C-04", "nombre": "Camino D: DRaaS gestionado con SLA" }
+    {
+      "id": "C-01",
+      "nombre": "Camino A: Nube multi-región gestionada"
+    },
+    {
+      "id": "C-02",
+      "nombre": "Camino B: Híbrido edge + respaldo nube"
+    },
+    {
+      "id": "C-03",
+      "nombre": "Camino C: On-prem activo-activo"
+    },
+    {
+      "id": "C-04",
+      "nombre": "Camino D: DRaaS gestionado con SLA"
+    }
   ],
   "escala": {
     "peso": "0.0–1.0 (suma 1.0)",
@@ -16,64 +28,173 @@
     {
       "id": "MPC-01",
       "nombre": "RTO/RPO y resiliencia probada",
-      "entorno": "operaciones",
-      "mafe": ["FO-01-P1"],
-      "peso": 0.18,
-      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 4, "C-04": 3 }
+      "entorno": "técnico",
+      "mafe": [
+        "FO-01-P1"
+      ],
+      "peso": 0.16,
+      "calificaciones": {
+        "C-01": 4,
+        "C-02": 3,
+        "C-03": 4,
+        "C-04": 3
+      }
     },
     {
       "id": "MPC-02",
       "nombre": "Coste total 3 años (CAPEX/OPEX)",
-      "entorno": "operaciones",
-      "mafe": ["FA-01-P1", "DO-02-P2"],
-      "peso": 0.15,
-      "calificaciones": { "C-01": 3, "C-02": 3, "C-03": 2, "C-04": 4 }
+      "entorno": "económico",
+      "mafe": [
+        "FA-01-P1",
+        "DO-02-P2"
+      ],
+      "peso": 0.14,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 4
+      }
     },
     {
       "id": "MPC-03",
       "nombre": "Cumplimiento y trazabilidad (auditoría)",
-      "entorno": "cumplimiento",
-      "mafe": ["FA-02-P1", "DA-02-P1"],
-      "peso": 0.14,
-      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 4, "C-04": 4 }
+      "entorno": "legal",
+      "mafe": [
+        "FA-02-P1",
+        "DA-02-P1"
+      ],
+      "peso": 0.12,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 4,
+        "C-03": 4,
+        "C-04": 4
+      }
     },
     {
       "id": "MPC-04",
       "nombre": "Latencia / cercanía a site crítico",
-      "entorno": "operaciones",
-      "mafe": ["DO-01-P1"],
-      "peso": 0.12,
-      "calificaciones": { "C-01": 3, "C-02": 4, "C-03": 4, "C-04": 3 }
+      "entorno": "técnico",
+      "mafe": [
+        "DO-01-P1"
+      ],
+      "peso": 0.1,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 4,
+        "C-03": 4,
+        "C-04": 3
+      }
     },
     {
       "id": "MPC-05",
       "nombre": "Automatización y pruebas HA/DR",
-      "entorno": "digital",
-      "mafe": ["FO-01-P1"],
-      "peso": 0.14,
-      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2, "C-04": 4 }
+      "entorno": "técnico",
+      "mafe": [
+        "FO-01-P1"
+      ],
+      "peso": 0.1,
+      "calificaciones": {
+        "C-01": 4,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 4
+      }
     },
     {
       "id": "MPC-06",
       "nombre": "Escalabilidad / elasticidad",
-      "entorno": "digital",
-      "mafe": ["FO-01-P2"],
-      "peso": 0.13,
-      "calificaciones": { "C-01": 4, "C-02": 3, "C-03": 2, "C-04": 3 }
+      "entorno": "técnico",
+      "mafe": [
+        "FO-01-P2"
+      ],
+      "peso": 0.1,
+      "calificaciones": {
+        "C-01": 4,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 3
+      }
     },
     {
       "id": "MPC-07",
       "nombre": "Riesgo de lock-in y portabilidad",
-      "entorno": "digital",
-      "mafe": ["FA-02-P1"],
-      "peso": 0.14,
-      "calificaciones": { "C-01": 2, "C-02": 3, "C-03": 4, "C-04": 3 }
+      "entorno": "legal",
+      "mafe": [
+        "FA-02-P1"
+      ],
+      "peso": 0.08,
+      "calificaciones": {
+        "C-01": 2,
+        "C-02": 3,
+        "C-03": 4,
+        "C-04": 3
+      }
+    },
+    {
+      "id": "MPC-08",
+      "nombre": "Patrocinio político y tramitología",
+      "entorno": "politico",
+      "mafe": [
+        "DA-02-P1"
+      ],
+      "peso": 0.05,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 3
+      }
+    },
+    {
+      "id": "MPC-09",
+      "nombre": "Aceptación/adopción social",
+      "entorno": "social",
+      "mafe": [
+        "DA-01-P1"
+      ],
+      "peso": 0.05,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 3
+      }
+    },
+    {
+      "id": "MPC-10",
+      "nombre": "Impacto ambiental y eficiencia energética",
+      "entorno": "ambiental",
+      "mafe": [
+        "FO-02-P1",
+        "DO-02-P2"
+      ],
+      "peso": 0.1,
+      "calificaciones": {
+        "C-01": 3,
+        "C-02": 3,
+        "C-03": 2,
+        "C-04": 4
+      }
     }
   ],
   "totales_ponderados": [
-    { "competidor": "C-01", "total": 3.31 },
-    { "competidor": "C-02", "total": 3.26 },
-    { "competidor": "C-03", "total": 3.16 },
-    { "competidor": "C-04", "total": 3.43 }
+    {
+      "competidor": "C-01",
+      "total": 3.28
+    },
+    {
+      "competidor": "C-02",
+      "total": 3.22
+    },
+    {
+      "competidor": "C-03",
+      "total": 2.92
+    },
+    {
+      "competidor": "C-04",
+      "total": 3.46
+    }
   ]
 }
