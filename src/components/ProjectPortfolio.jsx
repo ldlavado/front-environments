@@ -921,7 +921,7 @@ export default function ProjectPortfolio() {
     )
   }, [miniTab, topImpact, riskSummary, miniProgramList])
 
-  const quickAnswerContent = quickAnswer ?  (
+  const quickAnswerContent = quickAnswer ? (
     <div>
       <div style={{ fontWeight: 600 }}>{quickAnswer.title}</div>
       <div style={{ fontSize: 13, margin: '6px 0 12px' }}>{quickAnswer.text}</div>
