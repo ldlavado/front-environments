@@ -13,6 +13,7 @@ import MefiMatrix from './components/MefiMatrix'
 import MefeMatrix from './components/MefeMatrix'
 import MafeMatrix from './components/MafeMatrix'
 import MpcMatrix from './components/MpcMatrix'
+import MpcMatrix2 from './components/MpcMatrix2'
 import MmlMatrix from './components/MmlMatrix'
 import StakeholderEditor from './components/StakeholderEditor'
 import ExcelView from './components/ExcelView'
@@ -59,6 +60,7 @@ function App() {
         { key: 'mefe', title: 'Matriz MEFE' },
         { key: 'mafe', title: 'Matriz MAFE' },
         { key: 'mpc', title: 'Matriz MPC' },
+        { key: 'mpc2', title: 'Matriz MPC 2' },
         { key: 'mml', title: 'Matriz MML' },
         { key: 'portfolio', title: 'Portafolio proyectos' },
         { key: 'sim', title: 'Similitud' },
@@ -125,6 +127,7 @@ function App() {
   {tab === 'mefe' && <MefeMatrix />}
   {tab === 'mafe' && <MafeMatrix />}
   {tab === 'mpc' && <MpcMatrix />}
+  {tab === 'mpc2' && <MpcMatrix2 />}
   {tab === 'mml' && <MmlMatrix />}
   {tab === 'trees' && <Trees />}
   {tab === 'portfolio' && <ProjectPortfolio />}
