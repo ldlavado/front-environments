@@ -6,30 +6,30 @@ const COMPETITOR_BLUEPRINTS = [
     id: 'cloud-msp',
     nombre: 'Alianza cloud multi-región (Camino A)',
     enfoque: 'Partners AWS/GCP/Azure con SRE 24/7',
-    descripcion: 'Replica el Camino A descrito en la MML: topología activa-activa en múltiples regiones cloud y runbooks HA/DR.',
-    referencias: ['MML SOL-1', 'MAFE FO-01-P1', 'FA-02-P1'],
+    descripcion: 'Topología activa-activa en múltiples regiones cloud con runbooks HA/DR y automatización.',
     calificaciones: {
-      'FI-01': { valor: 4, nota: 'Escuadras IoT/IA y SRE especializadas en FO-01-P1.' },
-      'FI-02': { valor: 4, nota: 'Arquitectura DevOps e IaC multi-región (Camino A).' },
-      'FI-03': { valor: 3, nota: 'Controles Zero-Trust y trazabilidad (FA-02), pero requiere datos locales.' },
-      'FI-04': { valor: 2, nota: 'La gestión del cambio recae en el cliente (DA-01).' },
-      'FI-05': { valor: 2, nota: 'Necesita datamarts del cliente para cerrar la brecha MTBF/MTTR (DO-02).' },
-      'FI-06': { valor: 2, nota: 'Onboarding de usuarios transferido a equipos internos.' },
+      'HA-01': { valor: 4, nota: 'RTO/RPO < 5 min validado trimestralmente.' },
+      'HA-02': { valor: 4, nota: 'Regiones múltiples y baja latencia con edge cache.' },
+      'HA-03': { valor: 3, nota: 'Plantillas IaC multi-cloud reducen lock-in parcial.' },
+      'HA-04': { valor: 3, nota: 'Modelo OPEX alto pero optimizable con reservas.' },
+      'HA-05': { valor: 4, nota: 'Controles Zero-Trust y bitácoras auditables.' },
+      'HA-06': { valor: 4, nota: 'SRE 24/7 y soporte especializado.' },
+      'HA-07': { valor: 3, nota: 'Conectores a datamarts; requiere afinamiento de métricas.' },
     }
   },
   {
     id: 'hybrid-edge',
     nombre: 'Integrador OT/IT híbrido (Camino B)',
     enfoque: 'Edge local + respaldo nube operado por cuadrillas OT/IT',
-    descripcion: 'Corresponde al Camino B: infraestructura híbrida con despliegues en sitio y acompañamiento operacional.',
-    referencias: ['MML SOL-2', 'MAFE DO-01-P1', 'MAFE DA-01'],
+    descripcion: 'Infraestructura híbrida con despliegues en sitio y acompañamiento operacional.',
     calificaciones: {
-      'FI-01': { valor: 3, nota: 'Equipos OT con experiencia IoT aplican playbooks DO-01.' },
-      'FI-02': { valor: 3, nota: 'Integra edge y nube pero con menos automatización multi-región.' },
-      'FI-03': { valor: 2, nota: 'Gobierno de datos limitado; depende del cliente para trazabilidad.' },
-      'FI-04': { valor: 3, nota: 'Tiene células en campo para gestión del cambio (DA-01).' },
-      'FI-05': { valor: 2, nota: 'Apoya captura de KPIs pero no lidera datamarts financieros.' },
-      'FI-06': { valor: 3, nota: 'Onboarding presencial y academias OT/IT.' },
+      'HA-01': { valor: 3, nota: 'RTO/RPO moderado; failover parcial probado.' },
+      'HA-02': { valor: 3, nota: 'Baja latencia en sitio; resiliencia depende de enlaces.' },
+      'HA-03': { valor: 3, nota: 'Topologías híbridas reducen lock-in con esfuerzo.' },
+      'HA-04': { valor: 3, nota: 'Balance CAPEX/OPEX; costos edge + cloud.' },
+      'HA-05': { valor: 3, nota: 'Cumplimiento mixto; trazabilidad en sitio y nube.' },
+      'HA-06': { valor: 3, nota: 'Cuadrillas OT/IT y soporte en campo.' },
+      'HA-07': { valor: 2, nota: 'Limitada gobernanza de datos centralizada.' },
     }
   },
   {
@@ -37,31 +37,41 @@ const COMPETITOR_BLUEPRINTS = [
     nombre: 'Operador data center activo-activo (Camino C)',
     enfoque: 'Servicios gestionados on-prem con foco regulatorio',
     descripcion: 'Basado en el Camino C: dos sitios físicos activo-activo y contratos CAPEX/OPEX tradicionales.',
-    referencias: ['MML SOL-3', 'FA-01-P1'],
     calificaciones: {
-      'FI-01': { valor: 2, nota: 'Limitada experiencia en IA/IoT; prioriza hardware y operación.' },
-      'FI-02': { valor: 2, nota: 'DevOps parcial; cambios siguen ciclos tradicionales.' },
-      'FI-03': { valor: 4, nota: 'Fuerte en controles y auditoría in situ.' },
-      'FI-04': { valor: 2, nota: 'Gestiona el cambio vía procesos contractuales, con poca flexibilidad.' },
-      'FI-05': { valor: 3, nota: 'Reportes financieros/TCO incluyen métricas de disponibilidad.' },
-      'FI-06': { valor: 2, nota: 'Onboarding depende del cliente; foco principal es infraestructura.' },
+      'HA-01': { valor: 3, nota: 'RTO/RPO depende de fibras y replicación síncrona.' },
+      'HA-02': { valor: 2, nota: 'Latencia local excelente, sin multi-región.' },
+      'HA-03': { valor: 2, nota: 'Alto lock-in a vendor de hardware/colo.' },
+      'HA-04': { valor: 2, nota: 'CAPEX elevado y OPEX fijo; eficiencia variable.' },
+      'HA-05': { valor: 4, nota: 'Auditoría y compliance fuertes en sitio.' },
+      'HA-06': { valor: 3, nota: 'Soporte on-site programado.' },
+      'HA-07': { valor: 2, nota: 'Gobierno de datos requiere proyectos extra.' },
     }
   },
   {
     id: 'draas-operador',
     nombre: 'Proveedor DRaaS regional (Camino D)',
     enfoque: 'DRaaS con runbooks asistidos y pago por uso',
-    descripcion: 'Sigue el Camino D: servicio DRaaS gestionado con activación bajo demanda y foco en costos.',
-    referencias: ['MML SOL-4', 'DA-02-P1'],
+    descripcion: 'Servicio DRaaS gestionado con activación bajo demanda y foco en costos.',
     calificaciones: {
-      'FI-01': { valor: 3, nota: 'Cuenta con especialistas en failover y runbooks DR.' },
-      'FI-02': { valor: 3, nota: 'Automatiza pruebas HA/DR pero depende de plantillas estándar.' },
-      'FI-03': { valor: 2, nota: 'Trazabilidad basada en logs del proveedor; limitada personalización.' },
-      'FI-04': { valor: 2, nota: 'La gestión del cambio se transfiere al cliente.' },
-      'FI-05': { valor: 2, nota: 'Indicadores financieros se concentran en ahorro OPEX, no en MTBF/MTTR.' },
-      'FI-06': { valor: 2, nota: 'Enfoque en activaciones técnicas más que en adopción de usuarios.' },
+      'HA-01': { valor: 3, nota: 'Activaciones planificadas; RTO bajo en escenarios soportados.' },
+      'HA-02': { valor: 3, nota: 'Dependencia de conectividad hacia región DR.' },
+      'HA-03': { valor: 3, nota: 'Plantillas IaC y portabilidad moderada.' },
+      'HA-04': { valor: 4, nota: 'Pago por uso reduce CAPEX.' },
+      'HA-05': { valor: 2, nota: 'Trazabilidad basada en logs estándar; menor personalización.' },
+      'HA-06': { valor: 3, nota: 'Soporte gestionado enfocado en failover.' },
+      'HA-07': { valor: 2, nota: 'Dashboards de métricas limitados; requiere integración.' },
     }
   }
+]
+
+const DEFAULT_VARIABLES = [
+  { id: 'HA-01', nombre: 'RTO/RPO validado y pruebas HA/DR', descripcion: 'Capacidad de conmutar con RTO/RPO ≤5 min y pruebas trimestrales automatizadas.', peso: 0.20 },
+  { id: 'HA-02', nombre: 'Cobertura multi-región y latencia', descripcion: 'Disponibilidad en múltiples regiones y baja latencia hacia sitios críticos/locales.', peso: 0.18 },
+  { id: 'HA-03', nombre: 'Portabilidad y lock-in', descripcion: 'Uso de IaC, multi-cloud/edge y contratos que minimicen dependencia del proveedor.', peso: 0.12 },
+  { id: 'HA-04', nombre: 'TCO 3 años (CAPEX/OPEX)', descripcion: 'Costo total, elasticidad y opciones de pago por uso/reservas.', peso: 0.14 },
+  { id: 'HA-05', nombre: 'Seguridad, compliance y trazabilidad', descripcion: 'Controles Zero-Trust, auditoría y bitácoras alineadas a normativas.', peso: 0.14 },
+  { id: 'HA-06', nombre: 'Soporte 24/7 y acompañamiento', descripcion: 'SRE/NOC 24/7, tiempos de respuesta y soporte en campo/edge.', peso: 0.12 },
+  { id: 'HA-07', nombre: 'Datos y KPIs (MTBF/MTTR, ESG)', descripcion: 'Capacidad de alimentar datamarts y tableros de confiabilidad/energía.', peso: 0.10 },
 ]
 
 const clampScore = (value, min = 1, max = 4) => {
@@ -112,40 +122,6 @@ const fetchMatrix = async (path) => {
   }
 }
 
-const mergeInternalFactors = (dofa, mefi) => {
-  const result = []
-  if (!dofa && !mefi) return result
-  const seen = new Set()
-  const mefiMap = new Map((mefi?.factores || []).map((f) => [f.id, f]))
-
-  const pushItem = (item, tipoFallback) => {
-    if (!item?.id || seen.has(item.id)) return
-    seen.add(item.id)
-    const meta = mefiMap.get(item.id)
-    const basePeso = Number(meta?.peso ?? item.peso ?? 0)
-    result.push({
-      id: item.id,
-      tipo: tipoFallback || meta?.tipo || 'interno',
-      nombre: item.nombre || item.texto || meta?.nombre || item.id,
-      descripcion: item.texto || meta?.nombre || '',
-      peso: basePeso > 0 ? Number(basePeso) : 0,
-      evidencia: meta?.evidencia || [],
-    })
-  }
-
-  ;(dofa?.fortalezas || []).forEach((f) => pushItem({ ...f, nombre: f.texto }, 'fortaleza'))
-  ;(dofa?.debilidades || []).forEach((d) => pushItem({ ...d, nombre: d.texto }, 'debilidad'))
-
-  ;(mefi?.factores || []).forEach((f) => pushItem(f, f.tipo))
-
-  const totalWeight = result.reduce((acc, f) => acc + (Number(f.peso) || 0), 0)
-  if (totalWeight <= 0 && result.length) {
-    const uniform = Number((1 / result.length).toFixed(3))
-    return result.map((f) => ({ ...f, peso: uniform }))
-  }
-  return result
-}
-
 export default function MpcMatrix2() {
   const [dofa, setDofa] = useState(() => readLocalJson('dofa_data'))
   const [mefi, setMefi] = useState(() => readLocalJson('mefi_data'))
@@ -183,7 +159,7 @@ export default function MpcMatrix2() {
     }
   }, [competidores])
 
-  const factors = useMemo(() => mergeInternalFactors(dofa, mefi), [dofa, mefi])
+  const factors = useMemo(() => DEFAULT_VARIABLES, [])
   const sumPeso = useMemo(() => factors.reduce((acc, f) => acc + (Number(f.peso) || 0), 0), [factors])
 
   const totals = useMemo(() => {
@@ -323,8 +299,7 @@ export default function MpcMatrix2() {
         )}
       </div>
       <p style={{ opacity: 0.85, marginTop: 0 }}>
-        Esta versión toma las fortalezas y debilidades de DOFA/MEFI como factores internos
-        y cruza cuatro competidores plausibles identificados a partir de los caminos estratégicos de la MML (Camino A-D).
+        Esta versión cruza variables internas disponibles con cuatro competidores plausibles identificados a partir de los caminos estratégicos de la MML (Camino A-D).
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '8px 0 14px' }} data-export-ignore="true">
@@ -342,7 +317,7 @@ export default function MpcMatrix2() {
           Restaurar competidores sugeridos
         </button>
         <button onClick={syncMatrices} style={{ border: `1px solid ${styles.border}`, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
-          Sincronizar DOFA/MEFI locales
+          Sincronizar variables locales
         </button>
       </div>
 
@@ -355,21 +330,6 @@ export default function MpcMatrix2() {
                 <div style={{ fontWeight: 700 }}>{comp.nombre}</div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>{comp.enfoque}</div>
                 <p style={{ marginTop: 6, marginBottom: 6 }}>{comp.descripcion}</p>
-                {comp.referencias?.length ? (
-                  <div style={{ fontSize: 12, marginBottom: 6 }}>
-                    <strong>Referencias:</strong> {comp.referencias.join(', ')}
-                  </div>
-                ) : null}
-                {comp.mejores?.length ? (
-                  <div style={{ fontSize: 12 }}>
-                    <strong>Factores fuertes:</strong> {comp.mejores.map((m) => m.factor?.id).join(', ')}
-                  </div>
-                ) : null}
-                {comp.brechas?.length ? (
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
-                    <strong>Brecha:</strong> {comp.brechas.map((b) => b.factor?.id).join(', ')}
-                  </div>
-                ) : null}
               </div>
             ))}
           </div>
@@ -383,8 +343,7 @@ export default function MpcMatrix2() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ textAlign: 'left', borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>Factor interno (DOFA/MEFI)</th>
-                <th style={{ textAlign: 'left', borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>Tipo</th>
+                <th style={{ textAlign: 'left', borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>Variable</th>
                 <th style={{ textAlign: 'left', borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>Peso</th>
                 {competidores.map((comp) => (
                   <th key={comp.id} style={{ textAlign: 'left', borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>
@@ -399,14 +358,6 @@ export default function MpcMatrix2() {
                   <td style={{ borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>
                     <strong>{factor.id}</strong> – {factor.nombre}
                     {factor.descripcion && <div style={{ fontSize: 12, opacity: 0.85 }}>{factor.descripcion}</div>}
-                    {Array.isArray(factor.evidencia) && factor.evidencia.length ? (
-                      <ul style={{ margin: '4px 0 0 16px', fontSize: 12, opacity: 0.8 }}>
-                        {factor.evidencia.slice(0, 2).map((ev, idx) => <li key={idx}>{ev}</li>)}
-                      </ul>
-                    ) : null}
-                  </td>
-                  <td style={{ borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px', textTransform: 'capitalize' }}>
-                    {factor.tipo}
                   </td>
                   <td style={{ borderBottom: `1px solid ${styles.tableBorder}`, padding: '8px 6px' }}>
                     {Number(factor.peso).toFixed(2)}
@@ -440,11 +391,10 @@ export default function MpcMatrix2() {
             <tfoot>
               <tr>
                 <td style={{ padding: '8px 6px' }}><strong>Totales ponderados</strong></td>
-                <td></td>
                 <td style={{ padding: '8px 6px' }}>
                   <strong>{sumPeso.toFixed(2)}</strong>
                   {Math.abs(sumPeso - 1) > 0.01 ? (
-                    <span style={{ marginLeft: 6, color: '#f97316', fontWeight: 600 }}>Ajusta pesos en MEFI</span>
+                    <span style={{ marginLeft: 6, color: '#f97316', fontWeight: 600 }}>Ajusta pesos en las variables</span>
                   ) : (
                     <span style={{ marginLeft: 6, color: '#16a34a', fontWeight: 600 }}>Pesos OK</span>
                   )}
@@ -462,8 +412,8 @@ export default function MpcMatrix2() {
           </table>
         </div>
         <div style={{ marginTop: 10, fontSize: 13, opacity: 0.85 }}>
-          Escala sugerida: 1 = respuesta deficiente frente al factor interno, 4 = respuesta superior.
-          Ajusta los valores para reflejar la evidencia de cada competidor. Los pesos se heredan de MEFI.
+          Escala sugerida: 1 = respuesta deficiente frente a la variable, 4 = respuesta superior.
+          Ajusta los valores para reflejar la evidencia de cada competidor.
         </div>
       </div>
     </div>

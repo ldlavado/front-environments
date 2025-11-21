@@ -15,6 +15,7 @@ import MafeMatrix from './components/MafeMatrix'
 import MpcMatrix from './components/MpcMatrix'
 import MpcMatrix2 from './components/MpcMatrix2'
 import MmlMatrix from './components/MmlMatrix'
+import MmlMatrix2 from './components/MmlMatrix2'
 import StakeholderEditor from './components/StakeholderEditor'
 import ExcelView from './components/ExcelView'
 import EnvironmentResilience from './components/EnvironmentResilience'
@@ -62,6 +63,7 @@ function App() {
         { key: 'mpc', title: 'Matriz MPC' },
         { key: 'mpc2', title: 'Matriz MPC 2' },
         { key: 'mml', title: 'Matriz MML' },
+        { key: 'mml2', title: 'Matriz MML 2' },
         { key: 'portfolio', title: 'Portafolio proyectos' },
         { key: 'sim', title: 'Similitud' },
         { key: 'sankey', title: 'Sankey (texto)' },
@@ -129,6 +131,7 @@ function App() {
   {tab === 'mpc' && <MpcMatrix />}
   {tab === 'mpc2' && <MpcMatrix2 />}
   {tab === 'mml' && <MmlMatrix />}
+  {tab === 'mml2' && <MmlMatrix2 />}
   {tab === 'trees' && <Trees />}
   {tab === 'portfolio' && <ProjectPortfolio />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
