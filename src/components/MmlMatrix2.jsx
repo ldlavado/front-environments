@@ -18,6 +18,13 @@ const Section = ({ title, children, extra }) => (
 )
 
 const defaultData = {
+  stakeholders: [
+    { rol: 'Patrocinio y decisión', actores: ['Cliente/Operaciones', 'Finanzas/Sponsors'], responsabilidad: 'Aprobar presupuesto multi-región y ventanas de prueba.' },
+    { rol: 'Proveedor cloud/SRE', actores: ['Proveedor IoT/Cloud'], responsabilidad: 'Operar infraestructura activa-activa, SRE 24/7 y runbooks HA/DR.' },
+    { rol: 'Seguridad y cumplimiento', actores: ['Seguridad/Compliance'], responsabilidad: 'Zero-Trust, SIEM y evidencias de auditoría.' },
+    { rol: 'Operaciones en campo', actores: ['Equipos OT/IT en sitio'], responsabilidad: 'Soporte edge, pruebas controladas y continuidad local.' },
+    { rol: 'Regulador/Auditor', actores: ['MinTIC/Regulador', 'Auditor interno'], responsabilidad: 'Revisar cumplimiento y trazabilidad.' },
+  ],
   fin: {
     enunciado: 'Continuidad de servicio crítico asegurada con HA/DR multi-región y trazabilidad certificable.',
     indicadores: [
@@ -254,6 +261,20 @@ export default function MmlMatrix2() {
             ))}
           </div>
         </Section>
+
+        {data.stakeholders?.length ? (
+          <Section title="Stakeholders clave">
+            <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+              {data.stakeholders.map((s, idx) => (
+                <div key={idx} style={{ border: '1px solid var(--border, #2a2f45)', borderRadius: 10, padding: 10 }}>
+                  <div style={{ marginBottom: 4 }}><Pill>{s.rol}</Pill></div>
+                  {s.actores ? <div style={{ fontSize: 13, marginBottom: 4 }}><strong>Actores:</strong> {Array.isArray(s.actores) ? s.actores.join(', ') : s.actores}</div> : null}
+                  {s.responsabilidad ? <div style={{ fontSize: 13, opacity: 0.85 }}><strong>Responsabilidad:</strong> {s.responsabilidad}</div> : null}
+                </div>
+              ))}
+            </div>
+          </Section>
+        ) : null}
 
         {data.supuestos_globales?.length ? (
           <Section title="Supuestos globales">
