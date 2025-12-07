@@ -20,6 +20,9 @@ import EnvironmentResilience from './components/EnvironmentResilience'
 import Navbar from './components/Navbar'
 import ProjectPortfolio from './components/ProjectPortfolio'
 import Trees from './components/Trees'
+import ProjectCharter from './components/ProjectCharter'
+import StakeholderRegister from './components/StakeholderRegister'
+import StakeholderManagement from './components/StakeholderManagement'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -36,7 +39,7 @@ function App() {
 
   // Tema único claro: no es necesario setear atributos
 
-  // Agrupar tabs en dos secciones: Entornos y Análisis matricial
+  // Agrupar tabs en secciones: Entornos, Análisis matricial y PMI
   const groups = useMemo(() => ([
     {
       label: 'Entornos',
@@ -64,6 +67,14 @@ function App() {
         { key: 'sim', title: 'Similitud' },
         { key: 'sankey', title: 'Sankey (texto)' },
         { key: 'trees', title: 'Árboles' },
+      ]
+    },
+    {
+      label: 'PMI',
+      items: [
+        { key: 'project-charter', title: 'Project Charter' },
+        { key: 'stakeholder-register', title: 'Registro Stakeholders' },
+        { key: 'stakeholder-management', title: 'Gestión de Stakeholders' },
       ]
     }
   ]), [])
@@ -120,14 +131,17 @@ function App() {
 
       {tab === 'sim' && <SimilarityMatrix stakeholders={editableStakeholders} environments={envs} />}
       {tab === 'sankey' && <SankeySimple stakeholders={editableStakeholders} environments={envs} />}
-  {tab === 'dofa' && <DofaMatrix />}
-  {tab === 'mefi' && <MefiMatrix />}
-  {tab === 'mefe' && <MefeMatrix />}
-  {tab === 'mafe' && <MafeMatrix />}
-  {tab === 'mpc2' && <MpcMatrix2 />}
-  {tab === 'mml2' && <MmlMatrix2 />}
-  {tab === 'trees' && <Trees />}
-  {tab === 'portfolio' && <ProjectPortfolio />}
+      {tab === 'dofa' && <DofaMatrix />}
+      {tab === 'mefi' && <MefiMatrix />}
+      {tab === 'mefe' && <MefeMatrix />}
+      {tab === 'mafe' && <MafeMatrix />}
+      {tab === 'mpc2' && <MpcMatrix2 />}
+      {tab === 'mml2' && <MmlMatrix2 />}
+      {tab === 'trees' && <Trees />}
+      {tab === 'portfolio' && <ProjectPortfolio />}
+      {tab === 'project-charter' && <ProjectCharter />}
+      {tab === 'stakeholder-register' && <StakeholderRegister />}
+      {tab === 'stakeholder-management' && <StakeholderManagement />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
       {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>
