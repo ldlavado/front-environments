@@ -26,6 +26,7 @@ import StakeholderManagement from './components/StakeholderManagement'
 import RequirementsDocumentation from './components/RequirementsDocumentation'
 import RequirementsPlan from './components/RequirementsPlan'
 import Wbs from './components/Wbs'
+import WbsDictionary from './components/WbsDictionary'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -81,6 +82,7 @@ function App() {
         { key: 'requirements-doc', title: 'Documentación de Requisitos' },
         { key: 'requirements-plan', title: 'Plan de Gestión de Requisitos' },
         { key: 'wbs', title: 'WBS' },
+        { key: 'wbs-dictionary', title: 'Diccionario WBS' },
       ]
     }
   ]), [])
@@ -151,6 +153,7 @@ function App() {
       {tab === 'requirements-doc' && <RequirementsDocumentation stakeholders={editableStakeholders} />}
       {tab === 'requirements-plan' && <RequirementsPlan stakeholders={editableStakeholders} />}
       {tab === 'wbs' && <Wbs stakeholders={editableStakeholders} />}
+      {tab === 'wbs-dictionary' && <WbsDictionary />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
       {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>
