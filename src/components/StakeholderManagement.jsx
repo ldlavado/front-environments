@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { filterImpactfulStakeholders } from '../utils/impactfulStakeholders'
 
 const Card = ({ title, children, actions }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>
@@ -18,6 +19,13 @@ const defaultData = {
     fecha: '2026-01-15',
   },
   estrategias: [
+    {
+      stakeholder: 'MinTIC',
+      interes: 'Alto: lineamientos TIC, datos e interoperabilidad.',
+      impacto: 'Alto: define requerimientos regulatorios y de continuidad.',
+      estrategia: 'Compartir evidencias de HA/DR, trazabilidad y datos abiertos; coordinar revisiones.',
+      observaciones: 'Alinear reportes a guías MinTIC y mantener canales formales.',
+    },
     {
       stakeholder: 'Cliente / Operaciones',
       interes: 'Muy alto: continuidad y trazabilidad de servicios críticos.',
@@ -56,7 +64,22 @@ const defaultData = {
   ],
 }
 
-export default function StakeholderManagement() {
+const buildStrategiesFromRadar = (stakeholders = []) =>
+  stakeholders.map((s) => {
+    const variables = Object.entries(s.variables || {})
+      .sort(([, a], [, b]) => (Number(b.total_pct) || 0) - (Number(a.total_pct) || 0))
+      .slice(0, 3)
+      .map(([name, detail]) => `${name} (${detail.total_pct || 0}%)`)
+    return {
+      stakeholder: s.stakeholder,
+      interes: `Peso total: ${s.total_pct ?? '—'}%`,
+      impacto: variables.length ? `Variables clave: ${variables.join(' • ')}` : 'Sin variables definidas',
+      estrategia: 'Ajustar mensajes y métricas según las variables priorizadas.',
+      observaciones: 'Fuente: Editor/Radar (sincrónico).',
+    }
+  })
+
+export default function StakeholderManagement({ stakeholders: externalStakeholders = [] }) {
   const [data, setData] = useState(() => {
     try {
       const raw = localStorage.getItem('stakeholder_management_data')
@@ -84,7 +107,8 @@ export default function StakeholderManagement() {
 
   const handleExport = () => {
     try {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const payload = { ...(data || {}), estrategias }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -109,7 +133,11 @@ export default function StakeholderManagement() {
     }
   }, [])
 
-  const estrategias = useMemo(() => data.estrategias || [], [data.estrategias])
+  const impactful = useMemo(() => filterImpactfulStakeholders(externalStakeholders), [externalStakeholders])
+  const estrategias = useMemo(
+    () => (impactful.length ? buildStrategiesFromRadar(impactful) : data.estrategias || []),
+    [impactful, data.estrategias],
+  )
 
   return (
     <div>

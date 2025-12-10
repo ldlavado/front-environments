@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { filterImpactfulStakeholders } from '../utils/impactfulStakeholders'
 
 const Card = ({ title, children, actions }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>
@@ -141,7 +142,16 @@ const readStakeholderRegister = () => {
   }
 }
 
-export default function ProjectCharter() {
+const mapStakeholdersFromRadar = (stakeholders = []) =>
+  stakeholders.map((s) => {
+    const topVar = Object.entries(s.variables || {}).sort(([, a], [, b]) => (Number(b.total_pct) || 0) - (Number(a.total_pct) || 0))[0]
+    return {
+      nombre: s.stakeholder,
+      rol: topVar ? `Enfoque: ${topVar[0]} (${topVar[1].total_pct || 0}%)` : 'Sin variables definidas',
+    }
+  })
+
+export default function ProjectCharter({ stakeholders: externalStakeholders = [] }) {
   const [data, setData] = useState(() => {
     try {
       const raw = localStorage.getItem('project_charter_data')
@@ -195,7 +205,11 @@ export default function ProjectCharter() {
   }, [])
 
   const totalPresupuesto = useMemo(() => data.presupuesto?.reduce((acc, item) => acc + (Number(item.monto) || 0), 0) || 0, [data.presupuesto])
-  const registerStakeholders = useMemo(() => readStakeholderRegister() || [], [])
+  const impactful = useMemo(() => filterImpactfulStakeholders(externalStakeholders), [externalStakeholders])
+  const registerStakeholders = useMemo(
+    () => (impactful.length ? mapStakeholdersFromRadar(impactful) : readStakeholderRegister() || []),
+    [impactful],
+  )
 
   return (
     <div>

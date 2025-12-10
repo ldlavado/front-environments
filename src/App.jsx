@@ -23,6 +23,9 @@ import Trees from './components/Trees'
 import ProjectCharter from './components/ProjectCharter'
 import StakeholderRegister from './components/StakeholderRegister'
 import StakeholderManagement from './components/StakeholderManagement'
+import RequirementsDocumentation from './components/RequirementsDocumentation'
+import RequirementsPlan from './components/RequirementsPlan'
+import Wbs from './components/Wbs'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -75,6 +78,9 @@ function App() {
         { key: 'project-charter', title: 'Project Charter' },
         { key: 'stakeholder-register', title: 'Registro Stakeholders' },
         { key: 'stakeholder-management', title: 'Gestión de Stakeholders' },
+        { key: 'requirements-doc', title: 'Documentación de Requisitos' },
+        { key: 'requirements-plan', title: 'Plan de Gestión de Requisitos' },
+        { key: 'wbs', title: 'WBS' },
       ]
     }
   ]), [])
@@ -139,9 +145,12 @@ function App() {
       {tab === 'mml2' && <MmlMatrix2 />}
       {tab === 'trees' && <Trees />}
       {tab === 'portfolio' && <ProjectPortfolio />}
-      {tab === 'project-charter' && <ProjectCharter />}
-      {tab === 'stakeholder-register' && <StakeholderRegister />}
-      {tab === 'stakeholder-management' && <StakeholderManagement />}
+      {tab === 'project-charter' && <ProjectCharter stakeholders={editableStakeholders} />}
+      {tab === 'stakeholder-register' && <StakeholderRegister stakeholders={editableStakeholders} />}
+      {tab === 'stakeholder-management' && <StakeholderManagement stakeholders={editableStakeholders} />}
+      {tab === 'requirements-doc' && <RequirementsDocumentation stakeholders={editableStakeholders} />}
+      {tab === 'requirements-plan' && <RequirementsPlan stakeholders={editableStakeholders} />}
+      {tab === 'wbs' && <Wbs stakeholders={editableStakeholders} />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
       {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>

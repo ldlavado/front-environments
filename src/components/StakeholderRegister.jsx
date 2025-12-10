@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { downloadElementAsPng } from '../utils/downloadElementAsPng'
 import { MatrixInfoModal } from './MatrixInfoModal'
+import { filterImpactfulStakeholders } from '../utils/impactfulStakeholders'
 
 const Card = ({ title, children, actions }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>
@@ -20,22 +21,22 @@ const defaultData = {
   },
   stakeholders: [
     {
-      nombre: 'Cliente / Operaciones',
-      empresa: 'Operador de servicios críticos',
-      puesto: 'Patrocinio y decisión',
-      ubicacion: 'HQ + multi-sitio',
-      evaluacion: 'Aprobador clave (alto impacto)',
-      rol: 'Sponsor / aprobador',
-      contacto: 'sponsor@cliente.com',
-      requerimientos: 'Ventanas controladas, trazabilidad y reportes de riesgo.',
-      expectativas: 'Disponibilidad ≥99.95% y RTO/RPO ≤5 min validados.',
+      nombre: 'MinTIC',
+      empresa: 'Ministerio TIC',
+      puesto: 'Regulador sector TIC',
+      ubicacion: 'Bogotá',
+      evaluacion: 'Regulador/definidor de lineamientos',
+      rol: 'Normativa, datos e interoperabilidad',
+      contacto: 'contacto@mintic.gov.co',
+      requerimientos: 'Cumplimiento de lineamientos TIC, datos abiertos, seguridad y resiliencia.',
+      expectativas: 'Evidencias de continuidad y trazabilidad en servicios críticos.',
       influencia: 'Alta',
-      clasificacion: 'Interno',
-      apoyo: 'Apoyo',
-      fase: 'Planificación',
+      clasificacion: 'Externo',
+      apoyo: 'Neutral',
+      fase: 'Planificación y auditorías',
     },
     {
-      nombre: 'Proveedor cloud / SRE',
+      nombre: 'Proveedor IoT/Cloud',
       empresa: 'Proveedor IoT/Cloud',
       puesto: 'Operación y soporte 24/7',
       ubicacion: 'Remoto / multi-región',
@@ -50,54 +51,65 @@ const defaultData = {
       fase: 'Ejecución',
     },
     {
-      nombre: 'Seguridad y Cumplimiento',
-      empresa: 'Cliente',
-      puesto: 'CISO / Compliance',
-      ubicacion: 'HQ',
-      evaluacion: 'Aprobador de cumplimiento',
-      rol: 'Gobierno y auditoría',
-      contacto: 'seguridad@cliente.com',
-      requerimientos: 'Evidencias de auditoría, Zero-Trust y SIEM integrado.',
-      expectativas: '0 hallazgos críticos y trazabilidad completa.',
+      nombre: 'Cliente/Operaciones',
+      empresa: 'Operador de servicios críticos',
+      puesto: 'Patrocinio y decisión',
+      ubicacion: 'HQ + multi-sitio',
+      evaluacion: 'Aprobador clave (alto impacto)',
+      rol: 'Sponsor / aprobador',
+      contacto: 'sponsor@cliente.com',
+      requerimientos: 'Ventanas controladas, trazabilidad y reportes de riesgo.',
+      expectativas: 'Disponibilidad ≥99.95% y RTO/RPO ≤5 min validados.',
       influencia: 'Alta',
-      clasificacion: 'Interno',
-      apoyo: 'Neutral',
-      fase: 'Pruebas / Operación',
-    },
-    {
-      nombre: 'Equipos OT/IT en sitio',
-      empresa: 'Cliente / Operaciones en campo',
-      puesto: 'Soporte edge',
-      ubicacion: 'Sitios críticos',
-      evaluacion: 'Usuario clave / operación',
-      rol: 'Usuarios clave / soporte',
-      contacto: 'ops-campo@cliente.com',
-      requerimientos: 'Capacitación y runbooks claros para conmutación.',
-      expectativas: 'Sin interrupción prolongada en campo.',
-      influencia: 'Media',
       clasificacion: 'Interno',
       apoyo: 'Apoyo',
-      fase: 'Ejecución / Operación',
-    },
-    {
-      nombre: 'Regulador / Auditor',
-      empresa: 'MinTIC / Auditor interno',
-      puesto: 'Auditoría',
-      ubicacion: 'Remoto / oficinas',
-      evaluacion: 'Auditor / regulador',
-      rol: 'Revisor de cumplimiento',
-      contacto: 'auditoria@regulador.gov',
-      requerimientos: 'Evidencias de continuidad y seguridad.',
-      expectativas: 'Cierre sin hallazgos críticos.',
-      influencia: 'Alta',
-      clasificacion: 'Externo',
-      apoyo: 'Neutral',
-      fase: 'Cierres y auditorías',
+      fase: 'Planificación',
     },
   ],
 }
 
-export default function StakeholderRegister() {
+const normalizeName = (name) => (name || '').toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+
+const findMeta = (metaMap, name) => {
+  const norm = normalizeName(name)
+  if (metaMap.has(norm)) return metaMap.get(norm)
+  // intentar coincidencia parcial (ej. "Proveedor IoT/Cloud" vs "Proveedor cloud / SRE")
+  let best = null
+  metaMap.forEach((val, key) => {
+    if (key.includes(norm) || norm.includes(key)) best = val
+  })
+  return best
+}
+
+const mapFromRadar = (stakeholders = [], metaMap = new Map()) =>
+  stakeholders.map((s) => {
+    const variables = Object.entries(s.variables || {})
+      .sort(([, a], [, b]) => (Number(b.total_pct) || 0) - (Number(a.total_pct) || 0))
+      .map(([name, detail]) => ({
+        nombre: name,
+        total: Number(detail.total_pct) || 0,
+        topImpacto:
+          Object.entries(detail.impacto_pct || {})
+            .sort(([, a], [, b]) => Number(b) - Number(a))
+            .slice(0, 2)
+            .map(([env, val]) => `${env}: ${val}%`)
+            .join(', ') || 'Sin impactos',
+      }))
+
+    const meta = findMeta(metaMap, s.stakeholder)
+
+    return {
+      nombre: s.stakeholder,
+      rol: meta?.rol || `Peso total: ${s.total_pct ?? '—'}%`,
+      clasificacion: meta?.clasificacion || '—',
+      evaluacion: meta?.evaluacion || (variables[0] ? `Variable principal: ${variables[0].nombre}` : 'Sin variables'),
+      fase: meta?.fase || '—',
+      apoyo: meta?.apoyo || '—',
+      detalles: { variables },
+    }
+  })
+
+export default function StakeholderRegister({ stakeholders: externalStakeholders = [] }) {
   const [data, setData] = useState(() => {
     try {
       const raw = localStorage.getItem('stakeholder_register_data')
@@ -126,7 +138,8 @@ export default function StakeholderRegister() {
 
   const handleExport = () => {
     try {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const payload = { ...(data || {}), stakeholders }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -151,37 +164,78 @@ export default function StakeholderRegister() {
     }
   }, [])
 
-  const stakeholders = useMemo(() => data.stakeholders || [], [data.stakeholders])
+  const metaMap = useMemo(() => {
+    const map = new Map()
+    ;(data.stakeholders || []).forEach((s) => {
+      map.set(normalizeName(s.nombre), s)
+    })
+    const proveedor = map.get(normalizeName('Proveedor cloud / SRE'))
+    if (proveedor) {
+      map.set(normalizeName('Proveedor IoT/Cloud'), proveedor)
+      map.set(normalizeName('Proveedor iot cloud'), proveedor)
+    }
+    return map
+  }, [data.stakeholders])
+
+  const impactful = useMemo(() => filterImpactfulStakeholders(externalStakeholders), [externalStakeholders])
+  const stakeholders = useMemo(
+    () => (impactful.length ? mapFromRadar(impactful, metaMap) : data.stakeholders || []),
+    [impactful, data.stakeholders, metaMap],
+  )
 
   const modalSections = useMemo(() => {
     if (!selected) return []
-    return [
-      { title: 'Identificación', content: (
-        <div>
-          <div><strong>Nombre:</strong> {selected.nombre}</div>
-          <div><strong>Empresa:</strong> {selected.empresa}</div>
-          <div><strong>Puesto:</strong> {selected.puesto}</div>
-          <div><strong>Localización:</strong> {selected.ubicacion}</div>
-          <div><strong>Rol en el proyecto:</strong> {selected.rol}</div>
-          <div><strong>Evaluación:</strong> {selected.evaluacion}</div>
-          <div><strong>Contacto:</strong> {selected.contacto}</div>
-        </div>
-      ) },
-      { title: 'Requerimientos y expectativas', content: (
-        <div>
-          <div><strong>Requerimientos primordiales:</strong> {selected.requerimientos}</div>
-          <div><strong>Expectativas principales:</strong> {selected.expectativas}</div>
-        </div>
-      ) },
-      { title: 'Influencia y clasificación', content: (
-        <div>
-          <div><strong>Influencia potencial:</strong> {selected.influencia}</div>
-          <div><strong>Clasificación:</strong> {selected.clasificacion}</div>
-          <div><strong>Fase de mayor interés:</strong> {selected.fase}</div>
-          <div><strong>Apoyo/Neutral/Opositor:</strong> {selected.apoyo}</div>
-        </div>
-      ) },
+    const baseSections = [
+      {
+        title: 'Identificación',
+        content: (
+          <div>
+            <div><strong>Nombre:</strong> {selected.nombre}</div>
+            <div><strong>Rol:</strong> {selected.rol || '—'}</div>
+            <div><strong>Evaluación:</strong> {selected.evaluacion || '—'}</div>
+          </div>
+        ),
+      },
+      {
+        title: 'Influencia y clasificación',
+        content: (
+          <div>
+            <div><strong>Clasificación:</strong> {selected.clasificacion || '—'}</div>
+            <div><strong>Fase de interés:</strong> {selected.fase || '—'}</div>
+            <div><strong>Apoyo/Neutral/Opositor:</strong> {selected.apoyo || '—'}</div>
+          </div>
+        ),
+      },
     ]
+
+    if (selected.detalles?.variables?.length) {
+      baseSections.push({
+        title: 'Variables y entorno',
+        content: (
+          <div style={{ display: 'grid', gap: 6 }}>
+            {selected.detalles.variables.map((v, idx) => (
+              <div key={idx} style={{ padding: '6px 8px', border: '1px solid var(--border, #2a2f45)', borderRadius: 8 }}>
+                <div style={{ fontWeight: 600 }}>{v.nombre}</div>
+                <div style={{ fontSize: 13, opacity: 0.8 }}>Peso: {v.total}%</div>
+                <div style={{ fontSize: 13, opacity: 0.8 }}>Impacto: {v.topImpacto}</div>
+              </div>
+            ))}
+          </div>
+        ),
+      })
+    } else {
+      baseSections.push({
+        title: 'Requerimientos y expectativas',
+        content: (
+          <div>
+            <div><strong>Requerimientos primordiales:</strong> {selected.requerimientos || '—'}</div>
+            <div><strong>Expectativas principales:</strong> {selected.expectativas || '—'}</div>
+          </div>
+        ),
+      })
+    }
+
+    return baseSections
   }, [selected])
 
   return (
