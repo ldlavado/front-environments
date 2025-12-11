@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
-import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from '../MatrixInfoModal'
 
 const MAFE_DATA_VERSION = '2024-10-05'
 

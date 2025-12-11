@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
 
 const Pill = ({ children }) => (
   <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, background: 'var(--highlight-bg, #222)', border: '1px solid var(--border, #333)', marginRight: 8, marginBottom: 6 }}>

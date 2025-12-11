@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
-import { InfoTrigger, MatrixInfoModal } from './MatrixInfoModal'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
+import { InfoTrigger, MatrixInfoModal } from '../MatrixInfoModal'
 
 // Simple 2x2 DOFA matrix visualization
 // Props:

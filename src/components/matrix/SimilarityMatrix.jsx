@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
 
 function dot(a, b) { return a.reduce((s, v, i) => s + v * b[i], 0) }
 function norm(a) { return Math.sqrt(a.reduce((s, v) => s + v * v, 0)) }

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
-import { MatrixInfoModal } from './MatrixInfoModal'
-import { filterImpactfulStakeholders } from '../utils/impactfulStakeholders'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
+import { MatrixInfoModal } from '../MatrixInfoModal'
+import { filterImpactfulStakeholders } from '../../utils/impactfulStakeholders'
 
 const Card = ({ title, children, actions }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>

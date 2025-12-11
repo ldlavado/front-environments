@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
 
 const COMPETITOR_BLUEPRINTS = [
   {

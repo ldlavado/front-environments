@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
 
 const Card = ({ title, children }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>

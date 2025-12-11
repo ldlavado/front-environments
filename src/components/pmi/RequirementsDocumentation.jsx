@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { downloadElementAsPng } from '../utils/downloadElementAsPng'
-import { filterImpactfulStakeholders } from '../utils/impactfulStakeholders'
+import { downloadElementAsPng } from '../../utils/downloadElementAsPng'
+import { filterImpactfulStakeholders } from '../../utils/impactfulStakeholders'
 
 const Card = ({ title, children }) => (
   <div className="card" style={{ padding: 16, borderRadius: 12 }}>
