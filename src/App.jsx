@@ -27,6 +27,7 @@ import RequirementsDocumentation from './components/RequirementsDocumentation'
 import RequirementsPlan from './components/RequirementsPlan'
 import Wbs from './components/Wbs'
 import WbsDictionary from './components/WbsDictionary'
+import RequirementsTraceability from './components/RequirementsTraceability'
 
 function App() {
   const [editableStakeholders, setEditableStakeholders] = useState(stakeholders)
@@ -83,6 +84,7 @@ function App() {
         { key: 'requirements-plan', title: 'Plan de Gestión de Requisitos' },
         { key: 'wbs', title: 'WBS' },
         { key: 'wbs-dictionary', title: 'Diccionario WBS' },
+        { key: 'requirements-traceability', title: 'Matriz de Trazabilidad' },
       ]
     }
   ]), [])
@@ -154,6 +156,7 @@ function App() {
       {tab === 'requirements-plan' && <RequirementsPlan stakeholders={editableStakeholders} />}
       {tab === 'wbs' && <Wbs stakeholders={editableStakeholders} />}
       {tab === 'wbs-dictionary' && <WbsDictionary />}
+      {tab === 'requirements-traceability' && <RequirementsTraceability />}
       {tab === 'editor' && <StakeholderEditor key={resetVersion} stakeholders={editableStakeholders} environments={envs} onChange={setEditableStakeholders} />}
       {tab === 'resilience' && <EnvironmentResilience stakeholders={editableStakeholders} environments={envs} />}
     </div>
