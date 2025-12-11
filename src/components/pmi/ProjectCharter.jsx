@@ -130,6 +130,30 @@ const currency = (num) => {
   return Number(num).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 }
 
+const btnGhost = { border: '1px solid var(--border, #2a2f45)', padding: '4px 8px', borderRadius: 6, cursor: 'pointer', background: 'transparent' }
+
+const readWbsDictionary = () => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('wbs_dictionary_data')
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+const readRequirementsDoc = () => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('requirements_doc_data')
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
 const readStakeholderRegister = () => {
   if (typeof window === 'undefined') return null
   try {
@@ -211,6 +235,52 @@ export default function ProjectCharter({ stakeholders: externalStakeholders = []
     [impactful],
   )
 
+  const wbsData = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const raw = localStorage.getItem('wbs_data')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  }, [])
+
+  const wbsDictionary = useMemo(() => readWbsDictionary(), [])
+  const requirementsDoc = useMemo(() => readRequirementsDoc(), [])
+
+  const wbsSummary = useMemo(() => {
+    const paquetes = wbsData?.paquetes || []
+    const dic = wbsDictionary?.entradas || []
+    if (!paquetes.length && !dic.length) return []
+    const bases = paquetes.length ? paquetes.filter((p) => /\.0$/.test(p.codigo || '')) : dic.filter((p) => /\.0$/.test(p.codigo || ''))
+    return bases.map((p) => {
+      const detail = dic.find((d) => d.codigo === p.codigo) || {}
+      return {
+        codigo: p.codigo,
+        nombre: p.nombre || p.objetivo,
+        entregable: p.entregable || detail.entregable,
+        costo: detail.costo || '',
+        fecha: detail.fecha || '',
+      }
+    })
+  }, [wbsData, wbsDictionary])
+
+  const kpis = useMemo(() => {
+    const cuant = data.justificacion?.cuantitativa || {}
+    return [
+      { label: 'VAN', value: currency(cuant.VAN) },
+      { label: 'TIR', value: cuant.TIR || '—' },
+      { label: 'RBC', value: cuant.RBC || '—' },
+      { label: 'Presupuesto', value: currency(totalPresupuesto) },
+    ]
+  }, [data.justificacion?.cuantitativa, totalPresupuesto])
+
+  const criticalReqs = useMemo(() => {
+    const req = requirementsDoc?.requisitos || {}
+    const all = [...(req.funcionales || []), ...(req.noFuncionales || []), ...(req.calidad || [])]
+    return all.filter((r) => (r.prioridad || '').toLowerCase().includes('alta')).length
+  }, [requirementsDoc])
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
@@ -231,7 +301,62 @@ export default function ProjectCharter({ stakeholders: externalStakeholders = []
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }} data-export-ignore="true">
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'stakeholder-register' } }}
+          style={btnGhost}
+        >
+          Registro
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'stakeholder-management' } }}
+          style={btnGhost}
+        >
+          Gestión
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'requirements-doc' } }}
+          style={btnGhost}
+        >
+          Requisitos
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'wbs' } }}
+          style={btnGhost}
+        >
+          WBS
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'wbs-dictionary' } }}
+          style={btnGhost}
+        >
+          Diccionario WBS
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'requirements-traceability' } }}
+          style={btnGhost}
+        >
+          Trazabilidad
+          {criticalReqs ? <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 999, background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', fontSize: 11 }}>Crit: {criticalReqs}</span> : null}
+        </button>
+        <button
+          onClick={() => { if (typeof window !== 'undefined') { window.location.hash = 'requirements-traceability' } }}
+          style={btnGhost}
+        >
+          Trazabilidad
+        </button>
+      </div>
+
       <div ref={ref} style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+          {kpis.map((k) => (
+            <div key={k.label} style={{ border: '1px solid var(--border, #2a2f45)', borderRadius: 10, padding: 10, background: 'var(--card-bg)' }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{k.label}</div>
+              <div style={{ fontWeight: 800, fontSize: 18 }}>{k.value}</div>
+            </div>
+          ))}
+        </div>
+
         <Card title="Descripción del proyecto">
           <div style={{ marginBottom: 4 }}><strong>Nombre:</strong> {data.meta?.nombre}</div>
           <div style={{ marginBottom: 4 }}><strong>Siglas:</strong> {data.meta?.siglas}</div>
@@ -329,6 +454,39 @@ export default function ProjectCharter({ stakeholders: externalStakeholders = []
             </div>
           </Card>
         )}
+
+        <Card title="Resumen WBS / Entregables">
+          {wbsSummary.length ? (
+            <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+              {wbsSummary.map((p) => (
+                <div key={p.codigo} style={{ border: '1px solid var(--border, #2a2f45)', borderRadius: 10, padding: 10, background: 'var(--card-bg)' }}>
+                  <div style={{ fontWeight: 700 }}>{p.codigo} — {p.nombre}</div>
+                  <div style={{ fontSize: 13, opacity: 0.85 }}>{p.entregable || 'Entregable no definido'}</div>
+                  <div style={{ fontSize: 12, opacity: 0.8 }}>Costo estimado: {p.costo ? currency(p.costo) : '—'}</div>
+                  <div style={{ fontSize: 12, opacity: 0.8 }}>Fecha objetivo: {p.fecha || '—'}</div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => { if (typeof window !== 'undefined') { try { localStorage.setItem('wbs_last_view', 'wbs'); } catch {} window.location.hash = 'wbs' } }}
+                style={{ border: '1px solid var(--border, #2a2f45)', padding: '8px 10px', borderRadius: 10, cursor: 'pointer', background: 'transparent' }}
+              >
+                Ver WBS completo
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ opacity: 0.8 }}>No hay WBS cargado aún.</span>
+              <button
+                type="button"
+                onClick={() => { if (typeof window !== 'undefined') { try { localStorage.setItem('wbs_last_view', 'wbs'); } catch {} window.location.hash = 'wbs' } }}
+                style={{ border: '1px solid var(--border, #2a2f45)', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', background: 'transparent' }}
+              >
+                Ir a WBS
+              </button>
+            </div>
+          )}
+        </Card>
 
         <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
           <Card title="Finalidad del proyecto">

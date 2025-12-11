@@ -89,6 +89,7 @@ export default function StakeholderManagement({ stakeholders: externalStakeholde
     }
   })
   const ref = useRef(null)
+  const [filter, setFilter] = useState('')
 
   const handleImport = async (evt) => {
     const file = evt.target.files?.[0]
@@ -139,6 +140,22 @@ export default function StakeholderManagement({ stakeholders: externalStakeholde
     [impactful, data.estrategias],
   )
 
+  const filtered = useMemo(() => {
+    const term = filter.trim().toLowerCase()
+    if (!term) return estrategias
+    return estrategias.filter((e) =>
+      [e.stakeholder, e.interes, e.impacto, e.estrategia, e.observaciones]
+        .some((v) => String(v || '').toLowerCase().includes(term)),
+    )
+  }, [estrategias, filter])
+
+  const goToRadar = (name) => {
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('radar_selected_stakeholder', name) } catch { /* ignore */ }
+      window.location.hash = 'radar'
+    }
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
@@ -161,29 +178,48 @@ export default function StakeholderManagement({ stakeholders: externalStakeholde
 
       <div ref={ref} style={{ display: 'grid', gap: 12 }}>
         <Card title="Estrategia de gestión de stakeholders">
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }} data-export-ignore="true">
+            <input
+              placeholder="Filtrar por stakeholder, interés o estrategia"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border, #2a2f45)' }}
+            />
+            <span style={{ fontSize: 13, opacity: 0.75 }}>{filtered.length} de {estrategias.length}</span>
+          </div>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 820 }}>
-              <thead>
-                <tr>
-                  <th style={th}>Stakeholder</th>
-                  <th style={th}>Interés en el proyecto</th>
-                  <th style={th}>Evaluación del impacto</th>
-                  <th style={th}>Estrategia potencial (soporte / obstáculos)</th>
-                  <th style={th}>Observaciones y comentarios</th>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 980 }}>
+            <thead>
+              <tr>
+                <th style={thSticky}>Stakeholder</th>
+                <th style={thSticky}>Interés en el proyecto</th>
+                <th style={thSticky}>Evaluación del impacto</th>
+                <th style={thSticky}>Estrategia potencial (soporte / obstáculos)</th>
+                <th style={thSticky}>Observaciones y comentarios</th>
+                <th style={thSticky}>Entornos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((e, idx) => (
+                <tr key={idx}>
+                  <td style={td}>{e.stakeholder}</td>
+                  <td style={td}><Badge text={e.interes} tone="info" /></td>
+                  <td style={td}><Badge text={e.impacto} tone="warn" /></td>
+                  <td style={td}>{e.estrategia}</td>
+                  <td style={td}>{e.observaciones}</td>
+                  <td style={td}>
+                    <button
+                      onClick={() => goToRadar(e.stakeholder)}
+                      style={{ border: '1px solid var(--border, #2a2f45)', padding: '4px 8px', borderRadius: 6, cursor: 'pointer', background: 'transparent' }}
+                      title="Ver en Radar"
+                    >
+                      🔍
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {estrategias.map((e, idx) => (
-                  <tr key={idx}>
-                    <td style={td}>{e.stakeholder}</td>
-                    <td style={td}>{e.interes}</td>
-                    <td style={td}>{e.impacto}</td>
-                    <td style={td}>{e.estrategia}</td>
-                    <td style={td}>{e.observaciones}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
           </div>
         </Card>
       </div>
@@ -192,4 +228,25 @@ export default function StakeholderManagement({ stakeholders: externalStakeholde
 }
 
 const th = { textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', whiteSpace: 'nowrap' }
+const thSticky = { ...th, position: 'sticky', top: 0, background: 'var(--card-bg, #fff)', zIndex: 1 }
 const td = { padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', verticalAlign: 'top' }
+
+function Badge({ text, tone = 'info' }) {
+  const colors = {
+    info: { bg: 'rgba(59,130,246,0.12)', border: '#3b82f6' },
+    warn: { bg: 'rgba(251,191,36,0.15)', border: '#f59e0b' },
+  }
+  const palette = colors[tone] || colors.info
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 999,
+      background: palette.bg,
+      border: `1px solid ${palette.border}`,
+      fontSize: 12,
+    }}>
+      {text}
+    </span>
+  )
+}

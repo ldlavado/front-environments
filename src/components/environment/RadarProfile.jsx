@@ -4,8 +4,17 @@ import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler,
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
+const storageKey = 'radar_selected_stakeholder'
+
 export default function RadarProfile({ stakeholders, environments }) {
-  const [selected, setSelected] = useState(stakeholders[0]?.stakeholder || '')
+  const [selected, setSelected] = useState(() => {
+    if (typeof window === 'undefined') return stakeholders[0]?.stakeholder || ''
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved && stakeholders.some((s) => s.stakeholder === saved)) return saved
+    } catch { /* ignore */ }
+    return stakeholders[0]?.stakeholder || ''
+  })
   const [compare, setCompare] = useState(false)
   const [selected2, setSelected2] = useState('')
 
@@ -27,6 +36,13 @@ export default function RadarProfile({ stakeholders, environments }) {
       setSelected2('')
     }
   }, [stakeholders, selected, selected2])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (selected) localStorage.setItem(storageKey, selected)
+    } catch { /* ignore */ }
+  }, [selected])
 
   const labels = environments.map((e) => String(e).charAt(0).toUpperCase() + String(e).slice(1))
 

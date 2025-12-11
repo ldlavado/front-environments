@@ -112,15 +112,109 @@ const readWbsData = () => {
   }
 }
 
-const mapWbsToDictionary = (wbs) => {
+const fallbackCharter = {
+  presupuesto: [
+    { concepto: 'Infraestructura multi-región y redes', monto: 320000000 },
+    { concepto: 'SRE 24/7 y soporte en campo', monto: 180000000 },
+    { concepto: 'Seguridad, SIEM y observabilidad', monto: 120000000 },
+  ],
+  hitos: [
+    { evento: 'Topología multi-región aprobada', fecha: '2026-02-15' },
+    { evento: 'Primera región activa-activa en producción', fecha: '2026-04-05' },
+    { evento: 'Prueba HA/DR integral (RTO/RPO)', fecha: '2026-05-15' },
+    { evento: 'Cierre auditoría de continuidad sin hallazgos', fecha: '2026-06-30' },
+  ],
+  riesgos: {
+    amenazas: [
+      'Fallas prolongadas de ISP o conectividad hacia regiones.',
+      'Demoras en aprobaciones de pruebas en horario controlado.',
+      'Incremento de costos de red o reservas fuera del caso de negocio.',
+    ],
+    oportunidades: [
+      'Consolidar servicios regionales y reducir MTTR.',
+      'Mejorar postura de cumplimiento y agilizar auditorías.',
+      'Monetizar SLA premium con continuidad certificable.',
+    ],
+  },
+}
+
+const readProjectCharter = () => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('project_charter_data')
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+const mapWbsToDictionary = (wbs, charter = fallbackCharter) => {
   const list = wbs?.paquetes || []
-  return list.map((p) => ({
-    codigo: p.codigo,
-    objetivo: p.nombre,
-    descripcion: p.descripcion || 'Trabajo asociado al paquete WBS.',
-    entregable: p.entregable || 'Entregable definido en WBS.',
-    responsable: p.responsable || 'Por definir',
-  }))
+  const presup = charter?.presupuesto || fallbackCharter.presupuesto
+  const hitos = charter?.hitos || fallbackCharter.hitos
+  const riesgos = charter?.riesgos || fallbackCharter.riesgos
+
+  const scaleCost = (monto, factor = 0.1, fallback = 8000000) => {
+    const base = Number(monto) || 0
+    const val = Math.round(base * factor)
+    return val > 0 ? val : fallback
+  }
+
+  const costoPorBase = {
+    '1': scaleCost(presup[2]?.monto, 0.05, 6000000),
+    '2': scaleCost(presup[0]?.monto, 0.15, 25000000),
+    '3': scaleCost(presup[1]?.monto, 0.12, 18000000),
+    '4': scaleCost(presup[2]?.monto, 0.12, 12000000),
+    '5': scaleCost((presup[0]?.monto || 0) + (presup[1]?.monto || 0), 0.05, 10000000),
+    '6': scaleCost(presup[1]?.monto, 0.05, 8000000),
+  }
+
+  const fechaPorBase = {
+    '1': hitos[0]?.fecha,
+    '2': hitos[1]?.fecha,
+    '3': hitos[1]?.fecha,
+    '4': hitos[2]?.fecha,
+    '5': hitos[2]?.fecha,
+    '6': hitos[3]?.fecha,
+  }
+
+  const riesgoPorBase = {
+    '1': riesgos?.amenazas?.[1] || '',
+    '2': riesgos?.amenazas?.[2] || '',
+    '3': riesgos?.oportunidades?.[0] || '',
+    '4': riesgos?.amenazas?.[0] || '',
+    '5': riesgos?.oportunidades?.[1] || '',
+    '6': riesgos?.oportunidades?.[2] || '',
+  }
+
+  const criterioPorBase = {
+    '1': 'Documentación de requisitos aprobada por sponsor y stakeholders, trazabilidad completa y sin hallazgos críticos en revisión.',
+    '2': 'Arquitectura HA/DR validada en diseño y checklist de seguridad/compliance firmado por las partes.',
+    '3': 'Runbooks IaC/ops versionados, ejecutables desde pipeline y validados en simulacro controlado.',
+    '4': 'Dashboards y SIEM mostrando métricas clave y eventos HA/DR con alertas configuradas.',
+    '5': 'Prueba HA/DR ejecutada con RTO/RPO ≤5 min y acta de aceptación firmada.',
+    '6': 'Plan de formación entregado, ≥80% asistencia y evaluación de satisfacción positiva.',
+  }
+
+  return list.map((p) => {
+    const base = (p.codigo || '').split('.')[0]
+    return {
+      codigo: p.codigo,
+      objetivo: p.nombre,
+      descripcion: p.descripcion || 'Trabajo asociado al paquete WBS.',
+      entregable: p.entregable || 'Entregable definido en WBS.',
+      responsable: p.responsable || 'Por definir',
+      depende: p.depende || '',
+      criterioAceptacion: p.criterioAceptacion || criterioPorBase[base] || 'Criterio de aceptación documentado y aprobado.',
+      supuestos: p.supuestos || 'Disponibilidad de recursos y ventanas aprobadas.',
+      restricciones: p.restricciones || 'Ventanas de cambio y presupuesto asignado.',
+      recursos: p.recursos || 'Equipo PMO, Arquitectura, SRE',
+      costo: p.costo || costoPorBase[base] || '',
+      fecha: p.fecha || fechaPorBase[base] || hitos[hitos.length - 1]?.fecha || '',
+      riesgos: p.riesgos || riesgoPorBase[base] || '',
+    }
+  })
 }
 
 const buildPackagesFromRequirements = (req = {}) => {
@@ -165,6 +259,8 @@ export default function WbsDictionary() {
     }
   })
   const ref = useRef(null)
+  const [filter, setFilter] = useState('')
+  const [modalItem, setModalItem] = useState(null)
 
   const handleImport = async (evt) => {
     const file = evt.target.files?.[0]
@@ -209,6 +305,7 @@ export default function WbsDictionary() {
   }, [])
 
   const wbsData = useMemo(() => readWbsData(), [])
+  const charterData = useMemo(() => readProjectCharter() || fallbackCharter, [])
   const reqData = useMemo(() => {
     if (typeof window === 'undefined') return fallbackRequirements
     try {
@@ -226,13 +323,19 @@ export default function WbsDictionary() {
     const manual = basePaquetes.filter((p) => !p.auto)
     const mergedPaquetes = [...manual, ...auto]
 
-    const derived = mapWbsToDictionary({ paquetes: mergedPaquetes })
+    const derived = mapWbsToDictionary({ paquetes: mergedPaquetes }, charterData)
     const base = data.entradas || []
     const map = new Map()
     base.forEach((e) => map.set(e.codigo, e))
     derived.forEach((e) => map.set(e.codigo, { ...map.get(e.codigo), ...e }))
-    return Array.from(map.values()).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true }))
-  }, [data.entradas, reqData.requisitos, wbsData])
+    const list = Array.from(map.values()).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true }))
+    const term = filter.trim().toLowerCase()
+    if (!term) return list
+    return list.filter((e) =>
+      [e.codigo, e.objetivo, e.descripcion, e.entregable, e.responsable, e.depende]
+        .some((v) => String(v || '').toLowerCase().includes(term)),
+    )
+  }, [data.entradas, reqData.requisitos, wbsData, filter])
 
   return (
     <div>
@@ -254,7 +357,7 @@ export default function WbsDictionary() {
         </div>
       </div>
 
-      <div ref={ref} style={{ display: 'grid', gap: 12 }}>
+      <div ref={ref} style={{ display: 'grid', gap: 12, maxWidth: '1200px', margin: '0 auto' }}>
         <Card title="Control de versiones">
           <div style={{ display: 'grid', gap: 6, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <div><strong>Versión:</strong> {data.version?.version}</div>
@@ -271,43 +374,151 @@ export default function WbsDictionary() {
         </Card>
 
         <Card title="Paquetes de trabajo (Diccionario WBS)">
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 960 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }} data-export-ignore="true">
+            <input
+              placeholder="Filtrar por código, paquete, entregable o responsable"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border, #2a2f45)' }}
+            />
+            <button onClick={() => { try { localStorage.setItem('wbs_last_view', 'wbs'); window.location.hash = 'wbs' } catch { window.location.hash = 'wbs' } }} style={btn}>
+              Ver WBS
+            </button>
+            <span style={{ fontSize: 13, opacity: 0.75 }}>{entradas.length} filas</span>
+          </div>
+          <div style={{ overflowX: 'auto', maxHeight: '65vh', border: '1px solid var(--border, #2a2f45)', borderRadius: 10, margin: '0 auto', maxWidth: '1200px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1280 }}>
               <thead>
                 <tr>
-                  <th style={th}>Código</th>
-                  <th style={th}>Objetivo / Paquete</th>
-                  <th style={th}>Descripción del trabajo</th>
-                  <th style={th}>Entregable</th>
-                  <th style={th}>Responsable</th>
+                  <th style={thSticky}>Código</th>
+                  <th style={thSticky}>Objetivo / Paquete</th>
+                  <th style={thSticky}>Descripción del trabajo</th>
+                  <th style={thSticky}>Entregable</th>
+                  <th style={thSticky}>Responsable</th>
+                  <th style={thSticky}>Depende de</th>
+                  <th style={thSticky}>Criterio de aceptación</th>
+                  <th style={thSticky}>Supuestos</th>
+                  <th style={thSticky}>Restricciones</th>
+                  <th style={thSticky}>Recursos</th>
+                  <th style={thSticky}>Costo estimado</th>
+                  <th style={thSticky}>Fecha</th>
+                  <th style={thSticky}>Riesgos</th>
                 </tr>
               </thead>
               <tbody>
-                {entradas.map((e, idx) => {
-                  const isPhase = /\.0$/.test(e.codigo || '')
-                  const baseStyle = isPhase ? { ...td, background: 'var(--highlight-bg, rgba(59,130,246,0.12))', fontWeight: 700 } : td
-                  return (
-                    <tr key={`${e.codigo}-${idx}`}>
-                      <td style={baseStyle}>{e.codigo}</td>
-                      <td style={baseStyle}>
-                        {e.objetivo}
-                        {isPhase ? <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 999, border: '1px solid var(--border, #2a2f45)', fontSize: 12 }}>Fase</span> : null}
-                      </td>
-                      <td style={baseStyle}>{e.descripcion}</td>
-                      <td style={baseStyle}>{e.entregable}</td>
-                      <td style={baseStyle}>{e.responsable}</td>
-                    </tr>
-                  )
-                })}
+                {entradas.map((e, idx) => (
+                  <tr key={`${e.codigo}-${idx}`}>
+                    <td style={badgeStyle(e)}>{e.codigo}</td>
+                    <td style={badgeStyle(e)}>
+                      {e.objetivo}
+                      {isPhase(e) ? <Badge text="Fase" tone="info" /> : null}
+                    </td>
+                    <td style={badgeStyle(e)}>{e.descripcion}</td>
+                    <td style={badgeStyle(e)}>{e.entregable}</td>
+                    <td style={badgeStyle(e)}>{e.responsable}</td>
+                    <td style={badgeStyle(e)}>{e.depende || '—'}</td>
+                    <td style={badgeStyle(e)}>
+                      <button
+                        onClick={() => setModalItem(e)}
+                        style={{ ...btn, padding: '4px 8px', background: 'transparent' }}
+                        title="Ver criterios de aceptación"
+                      >
+                        Ver
+                      </button>
+                    </td>
+                    <td style={badgeStyle(e)}>{e.supuestos || '—'}</td>
+                    <td style={badgeStyle(e)}>{e.restricciones || '—'}</td>
+                    <td style={badgeStyle(e)}>{e.recursos || '—'}</td>
+                    <td style={badgeStyle(e)}>{e.costo || '—'}</td>
+                    <td style={badgeStyle(e)}>{e.fecha || '—'}</td>
+                    <td style={badgeStyle(e)}>{e.riesgos || '—'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </Card>
       </div>
+      <Modal item={modalItem} onClose={() => setModalItem(null)} />
     </div>
   )
 }
 
 const th = { textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', whiteSpace: 'nowrap' }
+const thSticky = { ...th, position: 'sticky', top: 0, background: 'var(--card-bg, #fff)', zIndex: 1 }
 const td = { padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', verticalAlign: 'top' }
 const btn = { border: '1px solid var(--border, #2a2f45)', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }
+
+const isPhase = (e) => /\.0$/.test(e.codigo || '')
+const badgeStyle = (e) => (isPhase(e) ? { ...td, background: 'var(--highlight-bg, rgba(59,130,246,0.12))', fontWeight: 700 } : td)
+
+function Badge({ text, tone = 'info' }) {
+  const colors = {
+    info: { bg: 'rgba(59,130,246,0.12)', border: '#3b82f6' },
+    warn: { bg: 'rgba(251,191,36,0.15)', border: '#f59e0b' },
+  }
+  const palette = colors[tone] || colors.info
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 999,
+      background: palette.bg,
+      border: `1px solid ${palette.border}`,
+      fontSize: 12,
+      marginLeft: 6,
+    }}>
+      {text}
+    </span>
+  )
+}
+
+const criteriaCatalog = [
+  'Entrega validada por sponsor y PMO con evidencias en SIEM.',
+  'Prueba HA/DR ejecutada sin hallazgos críticos.',
+  'Documentación revisada y aprobada por MinTIC/Regulador.',
+  'Runbooks versionados y ejecutables desde pipeline.',
+  'Capacitación completada con asistencia >80% y encuestas positivas.',
+  'Costos dentro de presupuesto aprobado ±10%.',
+]
+
+const Modal = ({ item, onClose }) => {
+  if (!item) return null
+  const criteriaList = item.criterioAceptacion && item.criterioAceptacion !== 'Por definir'
+    ? [item.criterioAceptacion]
+    : criteriaCatalog
+  return (
+    <div style={modalBackdrop} onClick={onClose}>
+      <div style={modalCard} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <h3 style={{ margin: 0 }}>Criterios de aceptación — {item.codigo}</h3>
+          <button onClick={onClose} style={{ ...btn, padding: '4px 8px' }}>Cerrar</button>
+        </div>
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>{item.objetivo}</div>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {criteriaList.map((c, idx) => <li key={idx}>{c}</li>)}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+const modalBackdrop = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.35)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 16,
+  zIndex: 50,
+}
+
+const modalCard = {
+  background: 'var(--card-bg, #fff)',
+  borderRadius: 12,
+  padding: 16,
+  minWidth: 'min(720px, 90vw)',
+  maxWidth: '90vw',
+  boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+}

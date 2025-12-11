@@ -10,34 +10,57 @@ const Card = ({ title, children }) => (
   </div>
 )
 
-const TreeNode = ({ node, level = 0 }) => (
-  <div style={{ paddingLeft: level === 0 ? 0 : 16, position: 'relative' }}>
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-      {level > 0 && (
-        <div style={{ width: 16, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 1, background: 'var(--border, #2a2f45)', height: '100%' }} />
-        </div>
-      )}
-      <div style={{ flex: 1 }}>
-        <div style={{ padding: 10, border: '1px solid var(--border, #2a2f45)', borderRadius: 8, background: 'var(--card-bg, #fff)', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
-          <div style={{ fontWeight: 700 }}>{node.codigo} — {node.nombre}</div>
-          <div style={{ fontSize: 13, opacity: 0.85 }}>{node.entregable || 'Entregable no definido'}</div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>{node.descripcion}</div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>Responsable: {node.responsable || '—'}</div>
-        </div>
-        {node.children?.length ? (
-          <div style={{ marginTop: 8, borderLeft: '1px dashed var(--border, #2a2f45)', paddingLeft: 12 }}>
-            {node.children.map((child) => (
-              <div key={child.codigo} style={{ marginBottom: 8 }}>
-                <TreeNode node={child} level={level + 1} />
-              </div>
-            ))}
+const TreeNode = ({ node, level = 0, expandedSet, onToggle }) => {
+  const isPhase = /\.0$/.test(node.codigo || '')
+  const isExpanded = expandedSet.has(node.codigo)
+  return (
+    <div style={{ paddingLeft: level === 0 ? 0 : 16, position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        {level > 0 && (
+          <div style={{ width: 16, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: 1, background: 'var(--border, #2a2f45)', height: '100%' }} />
           </div>
-        ) : null}
+        )}
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              padding: 10,
+              border: '1px solid var(--border, #2a2f45)',
+              borderRadius: 8,
+              background: isPhase ? 'rgba(59,130,246,0.08)' : 'var(--card-bg, #fff)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              cursor: node.children?.length ? 'pointer' : 'default',
+            }}
+            title={node.entregable || 'Entregable no definido'}
+            onClick={() => node.children?.length && onToggle(node.codigo)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+              {node.children?.length ? (
+                <span style={{ fontSize: 12 }}>{isExpanded ? '▼' : '▶'}</span>
+              ) : (
+                <span style={{ fontSize: 12, opacity: 0.5 }}>•</span>
+              )}
+              <span>{node.codigo} — {node.nombre}</span>
+              {isPhase ? <Badge text="Fase" tone="info" /> : null}
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>{node.entregable || 'Entregable no definido'}</div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>{node.descripcion}</div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>Responsable: {node.responsable || '—'}</div>
+          </div>
+          {node.children?.length && isExpanded ? (
+            <div style={{ marginTop: 8, borderLeft: '1px dashed var(--border, #2a2f45)', paddingLeft: 12 }}>
+              {node.children.map((child) => (
+                <div key={child.codigo} style={{ marginBottom: 8 }}>
+                  <TreeNode node={child} level={level + 1} expandedSet={expandedSet} onToggle={onToggle} />
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 const defaultData = {
   meta: {
@@ -131,6 +154,9 @@ export default function Wbs({ stakeholders: externalStakeholders = [] }) {
     }
   })
   const ref = useRef(null)
+  const [viewMode, setViewMode] = useState('tree') // 'tree' | 'table'
+  const [filter, setFilter] = useState('')
+  const [expanded, setExpanded] = useState(() => new Set())
 
   const handleImport = async (evt) => {
     const file = evt.target.files?.[0]
@@ -187,6 +213,47 @@ export default function Wbs({ stakeholders: externalStakeholders = [] }) {
   }, [data.paquetes, requirements])
   const tree = useMemo(() => buildTree(paquetes), [paquetes])
 
+  const filteredTree = useMemo(() => {
+    const term = filter.trim().toLowerCase()
+    if (!term) return tree
+    const match = (node) => [node.codigo, node.nombre, node.descripcion, node.responsable, node.entregable]
+      .some((v) => String(v || '').toLowerCase().includes(term))
+    const walk = (nodes) => nodes
+      .map((n) => {
+        const children = walk(n.children || [])
+        if (match(n) || children.length) return { ...n, children }
+        return null
+      })
+      .filter(Boolean)
+    return walk(tree)
+  }, [tree, filter])
+
+  const filteredList = useMemo(() => {
+    const term = filter.trim().toLowerCase()
+    const list = paquetes
+    if (!term) return list
+    return list.filter((p) =>
+      [p.codigo, p.nombre, p.descripcion, p.responsable, p.entregable].some((v) => String(v || '').toLowerCase().includes(term)),
+    )
+  }, [filter, paquetes])
+
+  const toggleExpand = (code) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(code)) next.delete(code)
+      else next.add(code)
+      return next
+    })
+  }
+
+  const expandAll = () => {
+    const all = new Set()
+    paquetes.forEach((p) => { if (p.children?.length || /\.0$/.test(p.codigo)) all.add(p.codigo) })
+    setExpanded(all)
+  }
+
+  const collapseAll = () => setExpanded(new Set())
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
@@ -219,15 +286,63 @@ export default function Wbs({ stakeholders: externalStakeholders = [] }) {
           </div>
         </Card>
 
-        <Card title="Estructura WBS (árbol)">
-          {tree.length ? (
-            <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border, #2a2f45)', borderRadius: 10, padding: 12 }}>
-              {tree.map((root, idx) => (
-                <TreeNode key={root.codigo} node={root} isLast={idx === tree.length - 1} hasSiblingAbove={idx !== 0} />
-              ))}
+        <Card title="Estructura WBS">
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }} data-export-ignore="true">
+            <input
+              placeholder="Filtrar por código, nombre, responsable..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border, #2a2f45)' }}
+            />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setViewMode('tree')} style={{ ...btn, background: viewMode === 'tree' ? 'var(--highlight-bg, rgba(59,130,246,0.12))' : 'transparent' }}>Árbol</button>
+              <button onClick={() => setViewMode('table')} style={{ ...btn, background: viewMode === 'table' ? 'var(--highlight-bg, rgba(59,130,246,0.12))' : 'transparent' }}>Tabla</button>
+              <button onClick={expandAll} style={btn}>Expandir</button>
+              <button onClick={collapseAll} style={btn}>Colapsar</button>
             </div>
+          </div>
+
+          {viewMode === 'tree' ? (
+            filteredTree.length ? (
+              <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border, #2a2f45)', borderRadius: 10, padding: 12 }}>
+                {filteredTree.map((root) => (
+                  <TreeNode key={root.codigo} node={root} expandedSet={expanded} onToggle={toggleExpand} />
+                ))}
+              </div>
+            ) : (
+              <div style={{ opacity: 0.75 }}>Sin paquetes WBS disponibles.</div>
+            )
           ) : (
-            <div style={{ opacity: 0.75 }}>Sin paquetes WBS disponibles.</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 960 }}>
+                <thead>
+                  <tr>
+                    <th style={th}>Código</th>
+                    <th style={th}>Paquete/Entregable</th>
+                    <th style={th}>Descripción</th>
+                    <th style={th}>Responsable</th>
+                    <th style={th}>Depende de</th>
+                    <th style={th}>Entregable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredList.map((p, idx) => {
+                    const isPhase = /\.0$/.test(p.codigo || '')
+                    const style = isPhase ? { ...td, background: 'rgba(59,130,246,0.08)', fontWeight: 700 } : td
+                    return (
+                      <tr key={`${p.codigo}-${idx}`}>
+                        <td style={style}>{p.codigo}</td>
+                        <td style={style}>{p.nombre}{isPhase ? <Badge text="Fase" tone="info" /> : null}</td>
+                        <td style={style}>{p.descripcion}</td>
+                        <td style={style}>{p.responsable}</td>
+                        <td style={style}>{p.depende || '—'}</td>
+                        <td style={style}>{p.entregable}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </Card>
       </div>
@@ -238,3 +353,24 @@ export default function Wbs({ stakeholders: externalStakeholders = [] }) {
 const th = { textAlign: 'left', padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', whiteSpace: 'nowrap' }
 const td = { padding: 8, borderBottom: '1px solid var(--border, #2a2f45)', verticalAlign: 'top' }
 const btn = { border: '1px solid var(--border, #2a2f45)', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }
+
+function Badge({ text, tone = 'info' }) {
+  const colors = {
+    info: { bg: 'rgba(59,130,246,0.12)', border: '#3b82f6' },
+    warn: { bg: 'rgba(251,191,36,0.15)', border: '#f59e0b' },
+  }
+  const palette = colors[tone] || colors.info
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 999,
+      background: palette.bg,
+      border: `1px solid ${palette.border}`,
+      fontSize: 12,
+      marginLeft: 6,
+    }}>
+      {text}
+    </span>
+  )
+}
